@@ -1,4 +1,5 @@
 'Core lifecycle and inventory. Models stay in their original locations. Process identities, unique ports and a profile-scoped lock protect lifecycle operations; individual engine branches implement only verified native APIs.'
+import process_runtime
 from pathlib import Path
 import contextlib, datetime, hashlib, json, os, plistlib, re, secrets, signal, socket, sqlite3, subprocess, sys, threading, time, urllib.request, urllib.error
 import psutil,platform,shutil
@@ -43,7 +44,7 @@ def listener_pids(port):
     if sys.platform!='darwin':
         try:return {c.pid for c in psutil.net_connections('tcp') if c.status=='LISTEN' and c.laddr.port==port and c.pid}
         except psutil.Error:raise RuntimeError('No se pudo identificar el oyente del puerto '+str(port)+'.') from None
-    p=subprocess.run(['/usr/sbin/lsof','-nP','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'],capture_output=True,text=True,timeout=5)
+    p=process_runtime.run(['/usr/sbin/lsof','-nP','-iTCP:'+str(port),'-sTCP:LISTEN','-Fp'],capture_output=True,text=True,timeout=5)
     if p.returncode not in (0,1):raise RuntimeError('No se pudo identificar el oyente del puerto '+str(port)+'.')
     return {int(line[1:]) for line in p.stdout.splitlines() if line.startswith('p') and line[1:].isdigit()}
 
@@ -106,7 +107,7 @@ def write(p,d):
     p=Path(p);temp=p.with_name(p.name+'.'+secrets.token_hex(4)+'.tmp');temp.write_text(json.dumps(d,indent=2,ensure_ascii=False),encoding='utf-8');os.chmod(temp,0o600);temp.replace(p)
 def run(args,timeout=60,env=None):
     if env is None:env={**os.environ,'PATH':os.pathsep.join([str(HOME/'.opencode/bin'),str(HOME/'.local/bin'),'/opt/homebrew/bin','/usr/local/bin',os.environ.get('PATH','/usr/bin:/bin:/usr/sbin:/sbin')])}
-    p=subprocess.run([str(x) for x in args],capture_output=True,text=True,timeout=timeout,env=env)
+    p=process_runtime.run([str(x) for x in args],capture_output=True,text=True,timeout=timeout,env=env)
     if p.returncode:raise RuntimeError('El comando de '+Path(str(args[0])).name+' no terminó correctamente (código '+str(p.returncode)+').')
     return p.stdout.strip()
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -137,7 +138,7 @@ def probe(s,path='/v1/models'):
     except (OSError,ValueError):return None
 def port_open(port):
     with socket.socket() as s:s.settimeout(.15);return s.connect_ex(('127.0.0.1',port))==0
-def registered(label):return sys.platform=='darwin' and subprocess.run(['launchctl','print',DOMAIN+'/'+label],capture_output=True).returncode==0
+def registered(label):return sys.platform=='darwin' and process_runtime.run(['launchctl','print',DOMAIN+'/'+label],capture_output=True).returncode==0
 def identity(pid):
     try:
         p=psutil.Process(pid)
@@ -201,7 +202,7 @@ def spawn(s,args,env=None):
     if port_open(PORTS[s]):raise RuntimeError('El puerto '+str(PORTS[s])+' está ocupado; no se toma control de un proceso desconocido.')
     e={**os.environ,'PATH':os.pathsep.join([str(HOME/'.opencode/bin'),str(HOME/'.local/bin'),'/opt/homebrew/bin','/usr/local/bin',os.environ.get('PATH','/usr/bin:/bin:/usr/sbin:/sbin')]),'HF_HUB_OFFLINE':'1','TRANSFORMERS_OFFLINE':'1','NO_PROXY':'127.0.0.1,localhost','TOKENIZERS_PARALLELISM':'false',**(env or {})}
     with (ROOT/'logs'/(s+'.log')).open('ab') as f:
-        p=subprocess.Popen([str(x) for x in args],stdout=f,stderr=f,stdin=subprocess.DEVNULL,cwd=ROOT,env=e,start_new_session=os.name!='nt',creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name=='nt' else 0)
+        p=process_runtime.popen([str(x) for x in args],stdout=f,stderr=f,stdin=subprocess.DEVNULL,cwd=ROOT,env=e,start_new_session=os.name!='nt',creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name=='nt' else 0)
     d=identity(p.pid)
     if not d:raise RuntimeError('El proceso no pudo arrancar.')
     d['managed']=True;set_process(s,d);event('start',{'service':s,'pid':p.pid});return d

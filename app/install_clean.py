@@ -6,7 +6,7 @@ The bundled Python runtime makes the installed backend independent of Strata.
 """
 from pathlib import Path
 import argparse,json,os,shutil,plistlib,hashlib,sys,platform
-BACKEND_FILES=('desktop_server.py','portable_security.py','core.py','operations.py','supervisor.py','lan.py','privileged.py','comparison.py','inference_stats.py','memory_status.py','updater.py','exo_local.py','integrations.py','integration_assistant.py','remote_servers.py','app_settings.py','external_providers.py','gpu_telemetry.py','reset_state.py','index.html','manifest.webmanifest','sw.js','offline.html','icon-180.png','icon-192.png','icon-512.png','MANUAL_ES.md','MANUAL_EN.md','i18n-en.json')
+BACKEND_FILES=('process_runtime.py','desktop_server.py','portable_security.py','core.py','operations.py','supervisor.py','lan.py','privileged.py','comparison.py','inference_stats.py','memory_status.py','updater.py','exo_local.py','integrations.py','integration_assistant.py','remote_servers.py','app_settings.py','external_providers.py','gpu_telemetry.py','reset_state.py','index.html','manifest.webmanifest','sw.js','offline.html','icon-180.png','icon-192.png','icon-512.png','MANUAL_ES.md','MANUAL_EN.md','i18n-en.json')
 def install(payload_app,applications,data,desktop=False,port=8040):
     if platform.system()!='Darwin' or platform.machine()!='arm64':raise RuntimeError('Esta compilación requiere macOS en Apple Silicon.')
     applications=Path(applications).expanduser().absolute();data=Path(data).expanduser().absolute();source=Path(payload_app).absolute();app=applications/'IA Local.app'

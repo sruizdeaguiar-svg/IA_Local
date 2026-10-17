@@ -1,32 +1,16 @@
 """CI smoke test of the actual frozen executable, not merely Python sources."""
-from pathlib import Path
-import json,os,socket,subprocess,sys,tempfile,time,urllib.request
-import psutil
-folder=Path(sys.argv[1]).absolute();exe=folder/('IA-Local.exe' if os.name=='nt' else 'IA-Local')
-with tempfile.TemporaryDirectory() as tmp:
- root=Path(tmp)/'data'
- with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
- child=None
- try:
-  subprocess.run([str(exe),'--data',str(root),'--port',str(port),'--no-browser'],check=True,timeout=90)
-  child=next(p for p in psutil.process_iter(['cmdline']) if p.info['cmdline'] and '--serve' in p.info['cmdline'] and str(root) in p.info['cmdline'])
-  opener=urllib.request.build_opener(urllib.request.ProxyHandler({}));token=(root/'token').read_text(encoding='utf-8')
-  req=urllib.request.Request(f'http://127.0.0.1:{port}/status',headers={'Authorization':'Bearer '+token})
-  until=time.monotonic()+30
-  while True:
-   with opener.open(req,timeout=5) as response:state=json.load(response)
-   if not state.get('starting'):break
-   if time.monotonic()>until:raise RuntimeError('Frozen supervisor state unavailable')
-   time.sleep(.2)
-  assert not state['services'] and not state['models'] and not state['lan']['enabled'] and not state['lan']['users']
-  assert state['ram_total']>0 and not state['platform']['gpu_limit_supported']
-  print('Frozen clean installation, health, state and unsupported Mac controls: passed')
- except Exception:
-  for log in (root/'logs').glob('*.log'):
-   print(log.name+': '+log.read_text(encoding='utf-8',errors='replace')[-10000:])
-  raise
- finally:
-  if child:
-   child.terminate()
-   try:child.wait(10)
-   except psutil.TimeoutExpired:child.kill();child.wait(10)
+import sys
+from packaged_session import PackagedSession
+with PackagedSession(sys.argv[1]) as app:
+ state=app.state
+ assert not state['services'] and not state['models'] and not state['lan']['enabled'] and not state['lan']['users']
+ assert state['ram_total']>0 and not state['platform']['gpu_limit_supported']
+ # Test late imports/assets after the initial launcher has exited and cleaned up.
+ result=app.request('/action',{'action':'scan'})
+ import time
+ until=time.monotonic()+30
+ while True:
+  time.sleep(.2);state=app.request('/status');job=next((j for j in state.get('jobs',[]) if j['id']==result['job']),None)
+  if job and job['state']!='running':assert job['state']=='done',job;break
+  assert time.monotonic()<until,'Late GGUF import/catalogue scan timeout'
+ print('Frozen clean profile, health, late GGUF import and platform controls: passed')

@@ -37,12 +37,22 @@ class Integrations(unittest.TestCase):
    remote_servers.register({**d,'allow_insecure':True});self.assertNotIn('synthetic-test-only',json.dumps(remote_servers.definitions()))
    if os.name!='nt':self.assertEqual((self.root/'remote-credentials.json').stat().st_mode&0o777,0o600)
    else:
-    import base64,subprocess,re
-    encoded=base64.b64encode(str(self.root/'remote-credentials.json').encode()).decode()
-    script="$p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"+encoded+"')); @((Get-Acl -LiteralPath $p).Access | ForEach-Object {$_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value}) | ConvertTo-Json -Compress"
-    acl=json.loads(subprocess.check_output(['powershell','-NoProfile','-NonInteractive','-EncodedCommand',base64.b64encode(script.encode('utf-16le')).decode()],text=True))
-    own=re.search(r'S-1-5-[0-9-]+',subprocess.check_output(['whoami','/user','/fo','csv','/nh'],text=True))[0]
-    self.assertEqual(set(acl),{own,'S-1-5-18'})
+    import ctypes
+    from ctypes import wintypes
+    api=ctypes.windll.advapi32;kernel=ctypes.windll.kernel32;dacl=ctypes.c_void_p();descriptor=ctypes.c_void_p()
+    status=api.GetNamedSecurityInfoW(ctypes.c_wchar_p(str(self.root/'remote-credentials.json')),1,4,None,None,ctypes.byref(dacl),None,ctypes.byref(descriptor));self.assertEqual(status,0)
+    class AclSize(ctypes.Structure):_fields_=[('count',wintypes.DWORD),('used',wintypes.DWORD),('free',wintypes.DWORD)]
+    size=AclSize();self.assertTrue(api.GetAclInformation(dacl,ctypes.byref(size),ctypes.sizeof(size),2));sids=set()
+    try:
+     for i in range(size.count):
+      ace=ctypes.c_void_p();self.assertTrue(api.GetAce(dacl,i,ctypes.byref(ace)));self.assertEqual(ctypes.c_ubyte.from_address(ace.value).value,0)
+      mask=wintypes.DWORD.from_address(ace.value+4).value;self.assertEqual(mask&0x1f01ff,0x1f01ff)
+      text=ctypes.c_void_p();self.assertTrue(api.ConvertSidToStringSidW(ctypes.c_void_p(ace.value+8),ctypes.byref(text)))
+      try:sids.add(ctypes.wstring_at(text.value))
+      finally:kernel.LocalFree(text)
+    finally:kernel.LocalFree(descriptor)
+    import subprocess,re
+    own=re.search(r'S-1-5-[0-9-]+',subprocess.check_output(['whoami','/user','/fo','csv','/nh'],text=True))[0];self.assertEqual(sids,{own,'S-1-5-18'})
    with patch.object(remote_servers,'request',return_value={'data':[{'id':'m'}]}):remote_servers.connect('remote-test')
    self.assertEqual(remote_servers.models_remote()[0]['format'],'Remote API');remote_servers.disconnect('remote-test');self.assertFalse(remote_servers.connected('remote-test'))
  def test_settings_rejects_hidden_parameters_and_bad_types(self):

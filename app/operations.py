@@ -1,4 +1,5 @@
 'Controlled evaluations, model-specific tuning, version checks and agent profiles. Synthetic benchmarks are distinct from passively observed requests; trial failure/cancellation is persisted rather than reported as valid speed.'
+import process_runtime
 import concurrent.futures, configparser, math, shutil, statistics, tarfile, urllib.parse
 from core import *
 
@@ -24,7 +25,7 @@ def installed(s,exe):
         except Exception:return 'No comprobada'
     if s in ('llama','strata-llama'):
         try:
-            p=subprocess.run([exe or str(LLAMA),'--version'],capture_output=True,text=True,timeout=20);text=p.stdout+' '+p.stderr;m=re.search(r'(?:version:\s*)?([^\n]*\b(?:build|commit)\b[^\n]*)',text);return m[1].strip() if m else text.strip().splitlines()[0] if text.strip() else 'No comprobada'
+            p=process_runtime.run([exe or str(LLAMA),'--version'],capture_output=True,text=True,timeout=20);text=p.stdout+' '+p.stderr;m=re.search(r'(?:version:\s*)?([^\n]*\b(?:build|commit)\b[^\n]*)',text);return m[1].strip() if m else text.strip().splitlines()[0] if text.strip() else 'No comprobada'
         except Exception:return 'No comprobada'
     if s=='freellmapi':return 'Fuente 369c471 (paquete 0.2.1)'
     if s=='vllm':
@@ -200,7 +201,7 @@ def benchmark(mid,engine,cancel,progress):
             args=[str(binary),'-m',m['path'],'-p','512','-n','128','-r','3','-t','4','-b','512','-ub','128','-ngl','99','-fa','1','-o','json']
             path=ROOT/'results'/(rid+'.raw.json');log=ROOT/'results'/(rid+'.log')
             with path.open('w') as out,log.open('w') as err:
-                p=subprocess.Popen(args,stdout=out,stderr=err,env={**os.environ,'GGML_METAL_NO_RESIDENCY':'1'},start_new_session=True)
+                p=process_runtime.popen(args,stdout=out,stderr=err,env={**os.environ,'GGML_METAL_NO_RESIDENCY':'1'},start_new_session=True)
                 began=time.monotonic();peak=0
                 while p.poll() is None:
                     if cancel.is_set():p.terminate();p.wait(timeout=20);raise RuntimeError('Evaluación cancelada.')
@@ -362,7 +363,7 @@ def optimize(mid,engine,cancel,progress):
                     out=ROOT/'results'/(report['id']+'-'+str(i)+'.raw.json');err=out.with_suffix('.log')
                     args=[str(binary),'-m',m['path'],'-p','512','-n','128','-r','3','-t',str(params['threads']),'-b',str(params['batch']),'-ub',str(params['ubatch']),'-ngl','99','-fa','1','-o','json']
                     with out.open('w') as a,err.open('w') as b:
-                        proc=subprocess.Popen(args,stdout=a,stderr=b,env={**os.environ,'GGML_METAL_NO_RESIDENCY':'1'},start_new_session=True);beg=time.monotonic();minimum=psutil.virtual_memory().available
+                        proc=process_runtime.popen(args,stdout=a,stderr=b,env={**os.environ,'GGML_METAL_NO_RESIDENCY':'1'},start_new_session=True);beg=time.monotonic();minimum=psutil.virtual_memory().available
                         while proc.poll() is None:
                             minimum=min(minimum,psutil.virtual_memory().available)
                             if cancel.is_set() or time.monotonic()-beg>600 or psutil.swap_memory().used-swap>512*2**20:
@@ -491,7 +492,7 @@ def agent_checks(cancel,progress,only=None):
                 (qa/'config.yaml').write_text(yaml.safe_dump(conf),encoding='utf-8');os.chmod(qa/'config.yaml',0o600);env.update(HERMES_HOME=str(qa),HERMES_SKIP_UPDATE_CHECK='1')
                 args=[HOME/'.local/bin/hermes','-z',prompt,'--provider','ia-local','-m',alias,'--ignore-rules','-t','bot_room','--usage-file',qa/'usage.json']
             try:
-                p=subprocess.run(list(map(str,args)),cwd=qa,env=env,capture_output=True,text=True,timeout=240)
+                p=process_runtime.run(list(map(str,args)),cwd=qa,env=env,capture_output=True,text=True,timeout=240)
                 output=p.stdout+'\n'+p.stderr
                 if agent=='opencode':
                     entries=[]

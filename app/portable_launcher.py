@@ -46,7 +46,7 @@ def main():
         command=[sys.executable]+([] if getattr(sys,'frozen',False) else [str(Path(__file__).resolve())])+['--serve','--data',str(ROOT),'--port',str(args.port)]
         (ROOT/'logs').mkdir(exist_ok=True)
         with (ROOT/'logs/portable-supervisor.log').open('ab') as log:
-            child=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=os.name!='nt',creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP|subprocess.DETACHED_PROCESS) if os.name=='nt' else 0)
+            child=subprocess.Popen(command,env={**os.environ,**({'PYINSTALLER_RESET_ENVIRONMENT':'1'} if getattr(sys,'frozen',False) else {})},stdin=subprocess.DEVNULL,stdout=log,stderr=log,start_new_session=os.name!='nt',creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP|subprocess.DETACHED_PROCESS) if os.name=='nt' else 0)
         until=time.monotonic()+40
         while True:
             try:request('/health');break

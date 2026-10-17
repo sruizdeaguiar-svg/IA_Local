@@ -1,4 +1,5 @@
 """Per-user filesystem protection and LAN TLS without macOS command dependencies."""
+import process_runtime
 from pathlib import Path
 import datetime,hashlib,ipaddress,os,re,socket,subprocess
 
@@ -7,10 +8,10 @@ def secure_directory(path):
     path=Path(path);path.mkdir(parents=True,exist_ok=True)
     if os.name!='nt':path.chmod(0o700);return
     # An explicit SID avoids localization and ambiguous domain/user account names.
-    result=subprocess.run(['whoami','/user','/fo','csv','/nh'],capture_output=True,text=True,check=True)
+    result=process_runtime.run(['whoami','/user','/fo','csv','/nh'],capture_output=True,text=True,check=True)
     sid=re.search(r'S-1-5-[0-9-]+',result.stdout)
     if not sid:raise RuntimeError('No se pudo identificar el usuario de Windows para proteger los datos.')
-    subprocess.run(['icacls',str(path),'/inheritance:r','/grant:r','*'+sid[0]+':(OI)(CI)F','*S-1-5-18:(OI)(CI)F'],capture_output=True,check=True)
+    process_runtime.run(['icacls',str(path),'/inheritance:r','/grant:r','*'+sid[0]+':(OI)(CI)F','*S-1-5-18:(OI)(CI)F'],capture_output=True,check=True)
 
 def certificate(root,ip):
     """Generate a private P-256 self-signed certificate; trust remains a user action."""
