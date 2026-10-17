@@ -1,0 +1,14 @@
+._*
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+*.sqlite*
+token
+*-credentials.json
+backups/
+results/
+logs/
+dist/
+build/

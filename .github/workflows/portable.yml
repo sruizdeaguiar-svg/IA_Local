@@ -1,0 +1,38 @@
+name: Portable Windows and Linux
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'qa/**']
+    paths: ['app/**', '.github/workflows/portable.yml']
+permissions:
+  contents: read
+jobs:
+  portable:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m pip install -r app/requirements-portable.txt
+      - run: python -m unittest discover -s app/tests -p 'test_*.py'
+      - run: node app/tests/test_comparison_ui.js
+      - run: node app/tests/test_controls_i18n.js
+      - run: python app/build_portable.py --out dist/portable
+      - name: Smoke test packaged executable
+        run: python app/tests/smoke_packaged.py dist/portable/bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IA-Local-${{ matrix.os }}
+          path: |
+            dist/portable/*.zip
+            dist/portable/release-manifest.json
+          if-no-files-found: error

@@ -1,0 +1,4 @@
+# Runtime dependencies. Inference engines remain separate installations.
+psutil==7.2.2
+PyYAML==6.0.3
+gguf==0.19.0

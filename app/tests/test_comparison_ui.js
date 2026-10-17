@@ -1,0 +1,35 @@
+// Exercise the shared renderer used by both native WKWebView and HTTPS Safari.
+const fs = require('node:fs'), vm = require('node:vm'), assert = require('node:assert/strict');
+const source = fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+const renderer = source.match(/^function renderComparison\(\).*$/m)[0];
+const elements = Object.fromEntries(['comparisonRows','comparisonTarget','benchComparisonRows','benchComparisonTarget','modelSelect','contextSelect','engineSelect'].map(id=>[id,{value:'',innerHTML:'',textContent:''}]));
+const state = {models:[{id:'one',label:'Modelo uno'},{id:'two',label:'Modelo dos'}],services:[{id:'llama',name:'Llama'},{id:'strata-llama',name:'Strata llama'}],comparisons:{one:[{engine:'llama',configured_context:4096,context:4096,status:'Medido',prompt_tok_s:100,generation_tok_s:20}],two:[{engine:'strata-llama',configured_context:8192,status:'Sin mediciones'}]}};
+const ctx = vm.createContext({data:state,$:id=>elements[id],selected:()=>state.models.find(m=>m.id===elements.modelSelect.value),fmt:(n,d=2)=>n==null?'—':Number(n).toFixed(d),esc:s=>String(s??'').replaceAll('<','&lt;')});
+vm.runInContext(renderer,ctx);
+function render(model,context,engine){elements.modelSelect.value=model;elements.contextSelect.value=context;elements.engineSelect.value=engine;vm.runInContext('renderComparison()',ctx);assert.equal(elements.benchComparisonRows.innerHTML,elements.comparisonRows.innerHTML);assert.equal(elements.benchComparisonTarget.textContent,elements.comparisonTarget.textContent);return elements.benchComparisonRows.innerHTML;}
+assert.match(render('one',4096,'llama'),/100.00 \/ 20.00/);
+assert.match(elements.benchComparisonRows.innerHTML,/Prueba al contexto elegido/);
+assert.match(render('one',8192,'llama'),/Sin prueba al contexto elegido/);
+assert.match(render('two',8192,'strata-llama'),/Sin mediciones/);
+assert.doesNotMatch(elements.benchComparisonRows.innerHTML,/100.00 \/ 20.00/);
+assert.match(elements.benchComparisonTarget.textContent,/Modelo dos/);
+console.log('Comparativa: mismas cifras en Modelos y Evaluación; modelo y contexto actualizados.');
+elements.optimizationSeriesSummary={textContent:''};elements.optimizationSeriesRows={innerHTML:''};
+vm.runInContext(source.match(/^function renderOptimizationSeries\(.*$/m)[0],ctx);
+ctx.series={id:'serie',model:'one',context:4096,status:'partial',rows:[{engine:'llama',mode:'optimize',status:'passed',selected:{threads:4},result_id:'opt-real'},{engine:'strata-llama',mode:'evaluate',status:'failed',error:'Sin memoria <1 GiB'}]};
+vm.runInContext('renderOptimizationSeries(series)',ctx);
+assert.match(elements.optimizationSeriesSummary.textContent,/Modelo uno/);
+assert.match(elements.optimizationSeriesRows.innerHTML,/Optimización automática/);
+assert.match(elements.optimizationSeriesRows.innerHTML,/Evaluación sin ajuste automático/);
+assert.match(elements.optimizationSeriesRows.innerHTML,/Sin memoria &lt;1 GiB/);
+console.log('Recorrido: optimización y evaluación diferenciadas; errores visibles sin atribuir perfiles.');
+const requests=[];ctx.action=(...args)=>requests.push(args);
+elements.modelSelect.value='one';elements.contextSelect.value='65536';
+const startAll=vm.runInContext(source.match(/\$\('optimizeAll'\)\.onclick=([^;]+);/)[1],ctx);startAll();
+assert.equal(requests[0][0],'optimize-all');assert.equal(requests[0][1].id,'one');assert.equal(requests[0][1].context,65536);
+console.log('Botón Optimizar todos: envía el modelo y contexto elegidos a la operación compartida.');
+elements.jobText={textContent:''};elements.logDetail={textContent:''};elements.showJobDetail={hidden:true};elements.job={classList:{toggle(){}}};
+vm.runInContext(source.match(/^function notify\(.*$/m)[0],ctx);ctx.longError='Error sintético '.repeat(500);vm.runInContext('notify(longError,true)',ctx);
+assert.ok(elements.jobText.textContent.length<270);assert.equal(elements.logDetail.textContent,ctx.longError);assert.equal(elements.showJobDetail.hidden,false);
+vm.runInContext('notify("Preparado")',ctx);assert.equal(elements.showJobDetail.hidden,true);
+console.log('Avisos extensos: resumen acotado y detalle completo separado.');
