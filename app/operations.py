@@ -30,7 +30,7 @@ def installed(s,exe):
     if s=='vllm':
         try:
             from email.parser import Parser
-            p=next(Path('/opt/homebrew/opt/vllm-metal/libexec').glob('lib/python*/site-packages/vllm_metal-*.dist-info/METADATA'));return Parser().parsestr(p.read_text())['Version']+' (Metal)'
+            p=next(Path('/opt/homebrew/opt/vllm-metal/libexec').glob('lib/python*/site-packages/vllm_metal-*.dist-info/METADATA'));return Parser().parsestr(p.read_text(encoding='utf-8'))['Version']+' (Metal)'
         except Exception:return 'No comprobada'
     if s=='strata':return '0.1.45 + parches Metal locales'
     apps={'exo':'EXO','lmstudio':'LM Studio'}
@@ -42,7 +42,7 @@ def installed(s,exe):
     name='unsloth' if s=='unsloth' else 'mlx_lm'
     try:
         from email.parser import Parser
-        p=next(paths[s].glob(name+'-*.dist-info/METADATA'));return Parser().parsestr(p.read_text())['Version']
+        p=next(paths[s].glob(name+'-*.dist-info/METADATA'));return Parser().parsestr(p.read_text(encoding='utf-8'))['Version']
     except Exception:return 'No comprobada'
 def check_updates():
     def check(item):
@@ -100,23 +100,23 @@ def configure_agents(mid,select=True,engine=None,targets=None):
     engine=engine or m['engines'][0]
     if engine not in m['engines']:raise RuntimeError('El motor no es compatible con este perfil.')
     alias=engine+'/'+mid
-    base='http://127.0.0.1:'+str(CONTROL_PORT)+'/v1';token=(ROOT/'token').read_text()
+    base='http://127.0.0.1:'+str(CONTROL_PORT)+'/v1';token=(ROOT/'token').read_text(encoding='utf-8')
     stamp=datetime.datetime.now().strftime('%Y%m%d-%H%M%S');backup=ROOT/'backups'/('agents-'+stamp+'-'+secrets.token_hex(3));backup.mkdir()
     oc=HOME/'.config/opencode/opencode.json';hc=HOME/'.hermes/config.yaml'
     shutil.copy2(oc,backup/'opencode.json');shutil.copy2(hc,backup/'config.yaml')
     catalog={e+'/'+r['id']:{'name':NAMES[e]+' · '+r['label'],'limit':{'context':r['context'],'output':min(4096,r['context']//4)}} for r in models() for e in r['engines']}
-    c=json.loads(oc.read_text());provider={'name':'IA Local','package':'@opencode/ai/providers/openai-compatible','settings':{'baseURL':base,'apiKey':token},'models':catalog}
+    c=json.loads(oc.read_text(encoding='utf-8'));provider={'name':'IA Local','package':'@opencode/ai/providers/openai-compatible','settings':{'baseURL':base,'apiKey':token},'models':catalog}
     c.setdefault('providers',{})['ia-local']=provider
     if isinstance(c.get('enabled_providers'),list) and 'ia-local' not in c['enabled_providers']:c['enabled_providers'].append('ia-local')
     if select:c['model']='ia-local/'+alias
-    d=yaml.safe_load(hc.read_text());d.setdefault('providers',{})['ia-local']={'base_url':base,'api_key':token,'transport':'chat_completions','discover_models':True,'context_length':m['context'],'models':{k:{'context_length':v['limit']['context']} for k,v in catalog.items()}}
+    d=yaml.safe_load(hc.read_text(encoding='utf-8'));d.setdefault('providers',{})['ia-local']={'base_url':base,'api_key':token,'transport':'chat_completions','discover_models':True,'context_length':m['context'],'models':{k:{'context_length':v['limit']['context']} for k,v in catalog.items()}}
     if select:d.setdefault('model',{}).update(provider='ia-local',default=alias,base_url=base,context_length=m['context'],api_mode='chat_completions')
     # Validate both documents before replacing either; preserve complete originals.
     text=yaml.safe_dump(d,allow_unicode=True,sort_keys=False);yaml.safe_load(text)
     try:
         if 'opencode' in targets:write(oc,c)
         if 'hermes' in targets:
-            temp=hc.with_suffix('.yaml.ia-local.tmp');temp.write_text(text);os.chmod(temp,0o600);temp.replace(hc)
+            temp=hc.with_suffix('.yaml.ia-local.tmp');temp.write_text(text,encoding='utf-8');os.chmod(temp,0o600);temp.replace(hc)
     except Exception:
         if 'opencode' in targets:shutil.copy2(backup/'opencode.json',oc)
         if 'hermes' in targets:shutil.copy2(backup/'config.yaml',hc)
@@ -155,7 +155,7 @@ def agent_profiles():
         c=read(HOME/'.config/opencode/opencode.json',{});selection=c.get('model','');result['opencode']={'selection':selection if isinstance(selection,str) else 'Sin selección'}
     except Exception:result['opencode']={'selection':'No disponible'}
     try:
-        c=yaml.safe_load((HOME/'.hermes/config.yaml').read_text()) or {};m=c.get('model',{});result['hermes']={'selection':((m.get('provider','')+'/'+m.get('default','')) if isinstance(m,dict) else str(m)),'context':m.get('context_length') if isinstance(m,dict) else None}
+        c=yaml.safe_load((HOME/'.hermes/config.yaml').read_text(encoding='utf-8')) or {};m=c.get('model',{});result['hermes']={'selection':((m.get('provider','')+'/'+m.get('default','')) if isinstance(m,dict) else str(m)),'context':m.get('context_length') if isinstance(m,dict) else None}
     except Exception:result['hermes']={'selection':'No disponible'}
     return result
 
@@ -209,7 +209,7 @@ def benchmark(mid,engine,cancel,progress):
                     progress('Midiendo pp512 / tg128 · '+str(int(time.monotonic()-began))+' s');time.sleep(.5)
                     if time.monotonic()-began>600:p.terminate();raise RuntimeError('Evaluación agotó el tiempo máximo.')
             if p.returncode:raise RuntimeError('llama-bench falló; no se calcula una tasa válida. Consulta el log del ensayo.')
-            raw=json.loads(path.read_text());result.update(raw=raw,peak_rss_gib=peak/2**30,version=result['engine_version'])
+            raw=json.loads(path.read_text(encoding='utf-8'));result.update(raw=raw,peak_rss_gib=peak/2**30,version=result['engine_version'])
         progress('Comprobación funcional real');began_load=time.monotonic();active=load(mid,engine);result['load_s']=time.monotonic()-began_load
         base=api_base(engine);headers=model_headers(engine)
         result['functional']=functional(engine,active['public_model'])
@@ -478,7 +478,7 @@ def agent_checks(cancel,progress,only=None):
             if agent=='hermes' and m['context']<64000:
                 report['rows'].append({'engine':engine,'agent':agent,'model':m['id'],'status':'blocked','reason':'Hermes exige 64000 tokens; este perfil anuncia '+str(m['context'])+'.'});write(ROOT/'agent-checks.json',report);continue
             progress(NAMES[agent]+' → '+NAMES[engine]);qa=ROOT/'qa'/agent;qa.mkdir(parents=True,mode=0o700,exist_ok=True)
-            token=(ROOT/'token').read_text();base='http://127.0.0.1:'+str(CONTROL_PORT)+'/v1';prompt='Responde únicamente el resultado de 17 multiplicado por 19.'
+            token=(ROOT/'token').read_text(encoding='utf-8');base='http://127.0.0.1:'+str(CONTROL_PORT)+'/v1';prompt='Responde únicamente el resultado de 17 multiplicado por 19.'
             env={k:v for k,v in os.environ.items() if not any(x in k for x in ('API_KEY','TOKEN','BASE_URL'))};env.update(HF_HUB_OFFLINE='1',TRANSFORMERS_OFFLINE='1',NO_PROXY='127.0.0.1,localhost')
             row={'engine':engine,'engine_version':installed(engine,SOURCES.get(engine,(None,None,None))[1]),'agent':agent,'agent_version':installed(agent,SOURCES[agent][1]),'model':m['id'],'context':m['context'],'functional':proof,'started':time.time()}
             if agent=='opencode':
@@ -488,7 +488,7 @@ def agent_checks(cancel,progress,only=None):
                 args=[HOME/'.opencode/bin/opencode','run','--standalone','--agent','probe','-m','ia-local/'+alias,'--format','json',prompt]
             else:
                 conf={'model':{'provider':'ia-local','default':alias,'base_url':base,'api_mode':'chat_completions','context_length':m['context'],'max_tokens':1024 if engine=='mirai' else 256},'providers':{'ia-local':{'base_url':base,'api_key':token,'transport':'chat_completions','context_length':m['context']}},'fallback_models':[],'agent':{'max_turns':1},'plugins':{'enabled':[]},'display':{'interface':'cli'}}
-                (qa/'config.yaml').write_text(yaml.safe_dump(conf));os.chmod(qa/'config.yaml',0o600);env.update(HERMES_HOME=str(qa),HERMES_SKIP_UPDATE_CHECK='1')
+                (qa/'config.yaml').write_text(yaml.safe_dump(conf),encoding='utf-8');os.chmod(qa/'config.yaml',0o600);env.update(HERMES_HOME=str(qa),HERMES_SKIP_UPDATE_CHECK='1')
                 args=[HOME/'.local/bin/hermes','-z',prompt,'--provider','ia-local','-m',alias,'--ignore-rules','-t','bot_room','--usage-file',qa/'usage.json']
             try:
                 p=subprocess.run(list(map(str,args)),cwd=qa,env=env,capture_output=True,text=True,timeout=240)
@@ -503,7 +503,7 @@ def agent_checks(cancel,progress,only=None):
                 else:answer=re.sub(r'\x1b\[[0-9;]*[a-zA-Z]','',p.stdout)
                 row.update(connection_passed=bool(p.returncode==0 and answer.strip()),arithmetic_passed=bool(re.search(r'\b323\b',answer)),status='passed' if p.returncode==0 and re.search(r'\b323\b',answer) else 'quality-failed' if p.returncode==0 and answer.strip() else 'failed',returncode=p.returncode,answer=answer[-1500:].replace(token,'[privado]'),wall_s=time.time()-row['started'])
                 if row['status']=='failed':row['error']=output[-1800:].replace(token,'[privado]')
-                (qa/'cli.log').write_text(output);os.chmod(qa/'cli.log',0o600)
+                (qa/'cli.log').write_text(output,encoding='utf-8');os.chmod(qa/'cli.log',0o600)
             except Exception as e:row.update(status='failed',error=str(e))
             # Test credentials are not retained in the synthetic evidence.
             for configfile in (qa/'opencode.json',qa/'config/opencode/opencode.json',qa/'config.yaml'):configfile.unlink(missing_ok=True)
@@ -519,7 +519,7 @@ def configure_cloud():
     import yaml
     start('freellmapi')
     dbpath=ROOT/'freellmapi-data.sqlite'
-    with sqlite3.connect(dbpath) as c:row=c.execute("SELECT value FROM settings WHERE key='unified_api_key'").fetchone()
+    with contextlib.closing(sqlite3.connect(dbpath)) as c:row=c.execute("SELECT value FROM settings WHERE key='unified_api_key'").fetchone()
     if not row:raise RuntimeError('FreeLLMAPI no confirmó su clave de cliente.')
     key=row[0];base='http://127.0.0.1:'+str(PORTS['freellmapi'])+'/v1';stamp=datetime.datetime.now().strftime('%Y%m%d-%H%M%S');backup=ROOT/'backups'/('cloud-'+stamp);backup.mkdir()
     oc=HOME/'.config/opencode/opencode.json';hc=HOME/'.hermes/config.yaml';shutil.copy2(oc,backup/'opencode.json');shutil.copy2(hc,backup/'config.yaml')
@@ -528,8 +528,8 @@ def configure_cloud():
         for provider in ('openai','openai-codex','freellmapi'):
             if provider not in c['enabled_providers']:c['enabled_providers'].append(provider)
     # No change to defaults or to any OpenAI credential.
-    d=yaml.safe_load(hc.read_text());d.setdefault('providers',{})['freellmapi']={'base_url':base,'api_key':key,'transport':'chat_completions','discover_models':True}
-    text=yaml.safe_dump(d,allow_unicode=True,sort_keys=False);write(oc,c);tmp=hc.with_suffix('.yaml.ia-local.tmp');tmp.write_text(text);os.chmod(tmp,0o600);tmp.replace(hc)
+    d=yaml.safe_load(hc.read_text(encoding='utf-8'));d.setdefault('providers',{})['freellmapi']={'base_url':base,'api_key':key,'transport':'chat_completions','discover_models':True}
+    text=yaml.safe_dump(d,allow_unicode=True,sort_keys=False);write(oc,c);tmp=hc.with_suffix('.yaml.ia-local.tmp');tmp.write_text(text,encoding='utf-8');os.chmod(tmp,0o600);tmp.replace(hc)
     event('cloud-configured',{'providers':['OpenAI conservado','FreeLLMAPI añadido'],'backup':str(backup)})
     return {'message':'FreeLLMAPI añadido sin cambiar el proveedor predeterminado. OpenAI permanece disponible. Abre FreeLLMAPI para añadir las claves de los proveedores de nube.'}
 

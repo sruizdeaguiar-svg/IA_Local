@@ -34,7 +34,15 @@ class Integrations(unittest.TestCase):
   with patch.object(remote_servers,'networks',return_value=[ipaddress.ip_network('192.168.10.0/24')]):
    d={'id':'remote-test','name':'Test LAN','base_url':'http://192.168.10.20:8080/v1','context':4096,'api_key':'synthetic-test-only'}
    self.assertRaises(ValueError,remote_servers.register,d)
-   remote_servers.register({**d,'allow_insecure':True});self.assertNotIn('synthetic-test-only',json.dumps(remote_servers.definitions()));self.assertEqual((self.root/'remote-credentials.json').stat().st_mode&0o777,0o600)
+   remote_servers.register({**d,'allow_insecure':True});self.assertNotIn('synthetic-test-only',json.dumps(remote_servers.definitions()))
+   if os.name!='nt':self.assertEqual((self.root/'remote-credentials.json').stat().st_mode&0o777,0o600)
+   else:
+    import base64,subprocess,re
+    encoded=base64.b64encode(str(self.root/'remote-credentials.json').encode()).decode()
+    script="$p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('"+encoded+"')); @((Get-Acl -LiteralPath $p).Access | ForEach-Object {$_.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value}) | ConvertTo-Json -Compress"
+    acl=json.loads(subprocess.check_output(['powershell','-NoProfile','-NonInteractive','-EncodedCommand',base64.b64encode(script.encode('utf-16le')).decode()],text=True))
+    own=re.search(r'S-1-5-[0-9-]+',subprocess.check_output(['whoami','/user','/fo','csv','/nh'],text=True))[0]
+    self.assertEqual(set(acl),{own,'S-1-5-18'})
    with patch.object(remote_servers,'request',return_value={'data':[{'id':'m'}]}):remote_servers.connect('remote-test')
    self.assertEqual(remote_servers.models_remote()[0]['format'],'Remote API');remote_servers.disconnect('remote-test');self.assertFalse(remote_servers.connected('remote-test'))
  def test_settings_rejects_hidden_parameters_and_bad_types(self):

@@ -17,6 +17,6 @@ def build(out):
             if not license_file.exists():raise FileNotFoundError('Repository LICENSE must accompany the package')
             z.write(license_file,'LICENSE')
         results.append({'archive':archive.name,'sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'edition':'source installer; Python 3.12+ required','native_runtime_verified':False})
-    (out/'source-manifest.json').write_text(json.dumps(results,indent=2));print(json.dumps(results,indent=2));return results
+    (out/'source-manifest.json').write_text(json.dumps(results,indent=2),encoding='utf-8');print(json.dumps(results,indent=2));return results
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--out',default='dist/source');build(p.parse_args().out)

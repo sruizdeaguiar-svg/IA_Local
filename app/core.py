@@ -20,7 +20,7 @@ AUX_PORTS={'mirai-backend':8001,'supervisor':CONTROL_PORT,'hermes-gateway':8642,
 NAMES={'strata':'Strata Metal','llama':'Llama M4 Pro','mirai':'Mirai Uzu','fm':'Apple Foundation Models','omlx':'oMLX','lmstudio':'LM Studio','mlx':'MLX-LM','unsloth':'Unsloth Studio','exo':'EXO','vllm':'vLLM Metal','strata-llama':'Strata · llama Metal','opencode':'OpenCode','hermes':'Hermes','freellmapi':'FreeLLMAPI · nube'}
 
 try:
-    _saved=json.loads((ROOT/'settings.json').read_text()).get('opencode_port')
+    _saved=json.loads((ROOT/'settings.json').read_text(encoding='utf-8')).get('opencode_port')
     if isinstance(_saved,int) and 1024<=_saved<=65535:PORTS['opencode']=_saved
 except (OSError,ValueError):pass
 
@@ -75,7 +75,11 @@ def check_service_ports(service):
                 except OSError as e:raise RuntimeError('El puerto '+str(port)+' no está disponible para '+NAMES.get(service,service)+'.') from e
 
 def init():
-    ROOT.mkdir(parents=True,exist_ok=True);os.chmod(ROOT,0o700)
+    ROOT.mkdir(parents=True,exist_ok=True)
+    if os.name=='nt':
+        from portable_security import secure_directory
+        secure_directory(ROOT)
+    else:os.chmod(ROOT,0o700)
     for x in ('logs','results','backups','updates','omlx-models','router-models','model-links'): (ROOT/x).mkdir(exist_ok=True)
     if not (ROOT/'token').exists():
         fd=os.open(ROOT/'token',os.O_CREAT|os.O_EXCL|os.O_WRONLY,0o600)
@@ -96,10 +100,10 @@ def db():
 def event(kind,data):
     with db() as c:c.execute('INSERT INTO events VALUES(?,?,?)',(time.time(),kind,json.dumps(data,ensure_ascii=False)))
 def read(p,default=None):
-    try:return json.loads(Path(p).read_text())
+    try:return json.loads(Path(p).read_text(encoding='utf-8'))
     except (OSError,ValueError):return default
 def write(p,d):
-    p=Path(p);temp=p.with_name(p.name+'.'+secrets.token_hex(4)+'.tmp');temp.write_text(json.dumps(d,indent=2,ensure_ascii=False));os.chmod(temp,0o600);temp.replace(p)
+    p=Path(p);temp=p.with_name(p.name+'.'+secrets.token_hex(4)+'.tmp');temp.write_text(json.dumps(d,indent=2,ensure_ascii=False),encoding='utf-8');os.chmod(temp,0o600);temp.replace(p)
 def run(args,timeout=60,env=None):
     if env is None:env={**os.environ,'PATH':os.pathsep.join([str(HOME/'.opencode/bin'),str(HOME/'.local/bin'),'/opt/homebrew/bin','/usr/local/bin',os.environ.get('PATH','/usr/bin:/bin:/usr/sbin:/sbin')])}
     p=subprocess.run([str(x) for x in args],capture_output=True,text=True,timeout=timeout,env=env)
@@ -364,7 +368,7 @@ def save_presets(rows=None,engine='llama'):
         if 'llama' in m['engines']:
             profile=profile_for(m,engine)
             presets += ['['+m['id']+']','model = '+m['path'],'c = '+str(m['context']),'threads = '+str(profile.get('threads',4)),'threads-batch = '+str(profile.get('threads',4)),'batch-size = '+str(profile.get('batch',512)),'ubatch-size = '+str(profile.get('ubatch',128)),'load-on-startup = false','']
-    (ROOT/('models-strata.ini' if engine=='strata-llama' else 'models.ini')).write_text('\n'.join(presets))
+    (ROOT/('models-strata.ini' if engine=='strata-llama' else 'models.ini')).write_text('\n'.join(presets),encoding='utf-8')
 def gguf_link(m):
     target=ROOT/'model-links'/(m['id']+'.gguf');target.parent.mkdir(exist_ok=True)
     if target.is_symlink():
@@ -649,7 +653,7 @@ def load(mid,engine):
     state={'id':mid,'engine':engine,'public_model':public,'label':m['label'],'context':m['context'],'time':time.time()};write(ROOT/'active.json',state);event('load',state);return state
 
 def model_headers(engine):
-    if engine.startswith('cloud-'):return {'Authorization':'Bearer '+(ROOT/'token').read_text()}
+    if engine.startswith('cloud-'):return {'Authorization':'Bearer '+(ROOT/'token').read_text(encoding='utf-8')}
     if engine.startswith('remote-'):
         import remote_servers
         return remote_servers.headers(engine)

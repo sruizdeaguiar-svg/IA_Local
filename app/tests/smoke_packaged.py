@@ -10,7 +10,7 @@ with tempfile.TemporaryDirectory() as tmp:
  try:
   subprocess.run([str(exe),'--data',str(root),'--port',str(port),'--no-browser'],check=True,timeout=90)
   child=next(p for p in psutil.process_iter(['cmdline']) if p.info['cmdline'] and '--serve' in p.info['cmdline'] and str(root) in p.info['cmdline'])
-  opener=urllib.request.build_opener(urllib.request.ProxyHandler({}));token=(root/'token').read_text()
+  opener=urllib.request.build_opener(urllib.request.ProxyHandler({}));token=(root/'token').read_text(encoding='utf-8')
   req=urllib.request.Request(f'http://127.0.0.1:{port}/status',headers={'Authorization':'Bearer '+token})
   until=time.monotonic()+30
   while True:
@@ -21,6 +21,10 @@ with tempfile.TemporaryDirectory() as tmp:
   assert not state['services'] and not state['models'] and not state['lan']['enabled'] and not state['lan']['users']
   assert state['ram_total']>0 and not state['platform']['gpu_limit_supported']
   print('Frozen clean installation, health, state and unsupported Mac controls: passed')
+ except Exception:
+  for log in (root/'logs').glob('*.log'):
+   print(log.name+': '+log.read_text(encoding='utf-8',errors='replace')[-10000:])
+  raise
  finally:
   if child:
    child.terminate()

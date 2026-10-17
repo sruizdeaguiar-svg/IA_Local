@@ -37,7 +37,7 @@ def main():
         runpy.run_module('supervisor',run_name='__main__');return
     prepare(ROOT)
     from core import init
-    init();token=(ROOT/'token').read_text()
+    init();token=(ROOT/'token').read_text(encoding='utf-8')
     def request(path):
         with OPENER.open(urllib.request.Request(f'http://127.0.0.1:{args.port}'+path,headers={'Authorization':'Bearer '+token}),timeout=2) as response:return json.load(response)
     try:request('/health')
@@ -61,7 +61,7 @@ if __name__=='__main__':
     try:main()
     except Exception as error:
         message='IA Local: '+str(error)
-        if os.name=='nt':
+        if os.name=='nt' and '--no-browser' not in sys.argv and '--serve' not in sys.argv:
             import ctypes
             ctypes.windll.user32.MessageBoxW(None,message,'IA Local',0x10)
         else:print(message,file=sys.stderr)

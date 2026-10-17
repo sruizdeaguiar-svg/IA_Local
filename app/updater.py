@@ -125,7 +125,7 @@ def _update(s,progress=lambda _:None):
     if s in ('omlx','exo'):result=app_update(s,backup,progress)
     elif s=='lmstudio':
         # LMS keeps separately versioned runtime packs. Never removes older packs.
-        before=run([HOME/'.lmstudio/bin/lms','runtime','ls'],30);(backup/'runtimes-before.txt').write_text(before)
+        before=run([HOME/'.lmstudio/bin/lms','runtime','ls'],30);(backup/'runtimes-before.txt').write_text(before,encoding='utf-8')
         write(backup/'restore.json',{'service':s,'kind':'lms-runtime','before':before})
         progress('Actualizando los runtimes compatibles de LM Studio…');run([HOME/'.lmstudio/bin/lms','runtime','update','--all','--yes'],900)
         after=run([HOME/'.lmstudio/bin/lms','runtime','ls'],30);result={'message':'Runtimes de LM Studio comprobados y actualizados. La aplicación de escritorio conserva su canal propio.','diagnostic':{'before':before,'after':after}}

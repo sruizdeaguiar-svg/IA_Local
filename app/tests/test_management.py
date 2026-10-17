@@ -49,7 +49,7 @@ class Management(unittest.TestCase):
  def test_privilege_allowlist(self):
   self.assertIn('gpu-set',lan.SENSITIVE);self.assertIn('update',lan.SENSITIVE);self.assertNotIn('gpu-set',lan.ALLOWED_ACTIONS)
  def test_shared_ui_actions_have_authorized_web_routes(self):
-  ui=(Path(__file__).resolve().parents[1]/'index.html').read_text();actions=set(re.findall(r"action\('([a-z-]+)'",ui))|set(re.findall(r'data-action="([a-z-]+)"',ui))
+  ui=(Path(__file__).resolve().parents[1]/'index.html').read_text(encoding='utf-8');actions=set(re.findall(r"action\('([a-z-]+)'",ui))|set(re.findall(r'data-action="([a-z-]+)"',ui))
   self.assertFalse(actions-lan.ALLOWED_ACTIONS-lan.ADMIN_ACTIONS)
  def test_ports_cannot_duplicate_primary_or_auxiliary(self):
   self.assertEqual(len(core.validate_ports()),len(core.PORTS)+len(core.AUX_PORTS))
@@ -134,7 +134,7 @@ class Management(unittest.TestCase):
   import yaml
   with tempfile.TemporaryDirectory() as t:
    home=Path(t);oc=home/'.config/opencode/opencode.json';hc=home/'.hermes/config.yaml';oc.parent.mkdir(parents=True);hc.parent.mkdir(parents=True)
-   cloud={'openai':{'unchanged':'synthetic'},'freellmapi':{'unchanged':'synthetic'}};core.write(oc,{'providers':cloud,'model':'openai/test'});hc.write_text('model:\n  provider: openai\n  default: test\n');prior=hc.read_bytes();m={'id':'m','label':'Modelo','context':4096,'engines':['llama']}
+   cloud={'openai':{'unchanged':'synthetic'},'freellmapi':{'unchanged':'synthetic'}};core.write(oc,{'providers':cloud,'model':'openai/test'});hc.write_text('model:\n  provider: openai\n  default: test\n',encoding='utf-8');prior=hc.read_bytes();m={'id':'m','label':'Modelo','context':4096,'engines':['llama']}
    with patch.object(operations,'HOME',home),patch.object(operations,'get_model',return_value=m),patch.object(operations,'models',return_value=[m]),patch.object(operations,'probe',return_value=None):operations.configure_agents('m',engine='llama',targets=['opencode'])
    result=core.read(oc);self.assertEqual(result['model'],'ia-local/llama/m');self.assertEqual(hc.read_bytes(),prior)
    for name,value in cloud.items():self.assertEqual(result['providers'][name],value)
@@ -142,9 +142,9 @@ class Management(unittest.TestCase):
   import yaml
   with tempfile.TemporaryDirectory() as t:
    home=Path(t);oc=home/'.config/opencode/opencode.json';hc=home/'.hermes/config.yaml';oc.parent.mkdir(parents=True);hc.parent.mkdir(parents=True)
-   core.write(oc,{'model':'openai/test'});prior=oc.read_bytes();cloud={'openai':{'unchanged':'synthetic'},'freellmapi':{'unchanged':'synthetic'}};hc.write_text(yaml.safe_dump({'model':{'provider':'openai','default':'test'},'providers':cloud}));m={'id':'m','label':'Modelo','context':65536,'engines':['strata-llama']}
+   core.write(oc,{'model':'openai/test'});prior=oc.read_bytes();cloud={'openai':{'unchanged':'synthetic'},'freellmapi':{'unchanged':'synthetic'}};hc.write_text(yaml.safe_dump({'model':{'provider':'openai','default':'test'},'providers':cloud}),encoding='utf-8');m={'id':'m','label':'Modelo','context':65536,'engines':['strata-llama']}
    with patch.object(operations,'HOME',home),patch.object(operations,'get_model',return_value=m),patch.object(operations,'models',return_value=[m]):operations.configure_agents('m',engine='strata-llama',targets=['hermes'])
-   result=yaml.safe_load(hc.read_text());self.assertEqual(oc.read_bytes(),prior);self.assertEqual(result['model']['default'],'strata-llama/m');self.assertEqual(result['model']['context_length'],65536)
+   result=yaml.safe_load(hc.read_text(encoding='utf-8'));self.assertEqual(oc.read_bytes(),prior);self.assertEqual(result['model']['default'],'strata-llama/m');self.assertEqual(result['model']['context_length'],65536)
    for name,value in cloud.items():self.assertEqual(result['providers'][name],value)
  def test_hermes_short_context_rejected_before_writing(self):
   with patch.object(operations,'get_model',return_value={'id':'m','context':4096}),patch.object(operations,'write') as write:
@@ -158,14 +158,14 @@ class Management(unittest.TestCase):
   with tempfile.TemporaryDirectory() as t:
    parent=Path(t);incoming=parent/'incoming';target=parent/'runtime';incoming.mkdir();target.mkdir()
    for folder,version in ((incoming,'new'),(target,'old')):
-    (folder/'llama-server').write_text(version);(folder/('lib-'+version)).write_text(version);(folder/'libggml.dylib').symlink_to('lib-'+version)
+    (folder/'llama-server').write_text(version,encoding='utf-8');(folder/('lib-'+version)).write_text(version,encoding='utf-8');(folder/'libggml.dylib').symlink_to('lib-'+version)
    with patch.object(updater,'run',return_value='version'):updater.replace_llama_runtime(incoming,target)
-   self.assertEqual((target/'llama-server').read_text(),'new');self.assertEqual((target/'libggml.dylib').read_text(),'new');self.assertFalse((target/'lib-old').exists())
+   self.assertEqual((target/'llama-server').read_text(encoding='utf-8'),'new');self.assertEqual((target/'libggml.dylib').read_text(encoding='utf-8'),'new');self.assertFalse((target/'lib-old').exists())
  def test_runtime_upgrade_validation_failure_restores_original(self):
   import updater
   with tempfile.TemporaryDirectory() as t:
-   parent=Path(t);incoming=parent/'incoming';target=parent/'runtime';incoming.mkdir();target.mkdir();(incoming/'llama-server').write_text('new');(target/'llama-server').write_text('old')
+   parent=Path(t);incoming=parent/'incoming';target=parent/'runtime';incoming.mkdir();target.mkdir();(incoming/'llama-server').write_text('new',encoding='utf-8');(target/'llama-server').write_text('old',encoding='utf-8')
    with patch.object(updater,'run',side_effect=['ok',RuntimeError('Validación fallida')]):self.assertRaises(RuntimeError,updater.replace_llama_runtime,incoming,target)
-   self.assertEqual((target/'llama-server').read_text(),'old');self.assertFalse(list(parent.glob('runtime.ia-*')))
+   self.assertEqual((target/'llama-server').read_text(encoding='utf-8'),'old');self.assertFalse(list(parent.glob('runtime.ia-*')))
 if __name__=='__main__':
  result=unittest.main(exit=False).result;sandbox.cleanup();sys.exit(not result.wasSuccessful())

@@ -18,7 +18,8 @@ def validate(value):
     if not 1<=len(name)<=80:raise ValueError('Nombre no válido.')
     exe=Path(d.get('executable','')).expanduser()
     if not exe.is_absolute() or not exe.is_file() or not os.access(exe,os.X_OK):raise ValueError('El ejecutable debe existir, ser ejecutable y tener ruta absoluta.')
-    if exe.suffix.lower() in ('.cmd','.bat','.ps1','.vbs','.js') or exe.resolve().stem.lower() in ('sh','bash','zsh','fish','cmd','powershell','pwsh','wscript','cscript','sudo','osascript','launchctl','curl','wget','rm'):raise ValueError('El asistente no admite shells, elevación ni comandos de instalación.')
+    banned={'sh','bash','dash','ash','ksh','csh','tcsh','zsh','fish','busybox','cmd','powershell','pwsh','wscript','cscript','sudo','osascript','launchctl','curl','wget','rm'}
+    if exe.suffix.lower() in ('.cmd','.bat','.ps1','.vbs','.js') or exe.stem.lower() in banned or exe.resolve().stem.lower() in banned:raise ValueError('El asistente no admite shells, elevación ni comandos de instalación.')
     port=d.get('port')
     if type(port) is not int or not 1024<=port<=65535:raise ValueError('Puerto entre 1024 y 65535.')
     validate_ports({**{s:p for s,p in PORTS.items() if s!=sid},sid:port})

@@ -68,7 +68,7 @@ def handler_class(parent):
             if not session:self.desktop_send({'error':'Sesión local caducada. Abre IA Local de nuevo.'},401);return
             base=f'/desktop/{sid}/';tail=path.removeprefix(base)
             if not tail:
-                html=(ROOT/'index.html').read_text();html=re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*>','',html);html=html.replace('</head>',f'<link rel="icon" href="{base}icon-192.png"></head>');html=html.replace('<script>',bootstrap_js(base,session['csrf'])+'<script>',1)
+                html=(ROOT/'index.html').read_text(encoding='utf-8');html=re.sub(r'<meta http-equiv="Content-Security-Policy"[^>]*>','',html);html=html.replace('</head>',f'<link rel="icon" href="{base}icon-192.png"></head>');html=html.replace('<script>',bootstrap_js(base,session['csrf'])+'<script>',1)
                 # Offline worker is a LAN/PWA feature; never cache owner capabilities.
                 html=re.sub(r"if\('serviceWorker' in navigator[^\n]+",'',html)
                 self.desktop_send(html,ctype='text/html; charset=utf-8',headers={'Content-Security-Policy':"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"});return
@@ -103,7 +103,7 @@ def handler_class(parent):
                 method=body.get('method','GET')
                 if method not in ('GET','POST'):raise ValueError('Método no permitido.')
                 payload=json.dumps(body['body']).encode() if method=='POST' else None
-                request=urllib.request.Request(f'http://127.0.0.1:{CONTROL_PORT}'+route,data=payload,method=method,headers={'Authorization':'Bearer '+(ROOT/'token').read_text(),'Content-Type':'application/json'})
+                request=urllib.request.Request(f'http://127.0.0.1:{CONTROL_PORT}'+route,data=payload,method=method,headers={'Authorization':'Bearer '+(ROOT/'token').read_text(encoding='utf-8'),'Content-Type':'application/json'})
                 with OPENER.open(request,timeout=30) as response:result=json.load(response)
                 self.desktop_send(result)
             except Exception as e:self.desktop_send({'error':str(e)},400)

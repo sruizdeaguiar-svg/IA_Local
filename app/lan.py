@@ -217,7 +217,7 @@ class Gateway(BaseHTTPRequestHandler):
                     if not self.origin_ok():self.send({'error':'Origen no permitido'},403);return
                 self.proxy();return
             if path=='/' and self.command=='GET':
-                page=(ROOT/'index.html').read_text().replace('__IA_UI_BUILD__',str((ROOT/'index.html').stat().st_mtime_ns)).replace("default-src 'none';", "default-src 'none'; connect-src 'self'; worker-src 'self'; manifest-src 'self';")
+                page=(ROOT/'index.html').read_text(encoding='utf-8').replace('__IA_UI_BUILD__',str((ROOT/'index.html').stat().st_mtime_ns)).replace("default-src 'none';", "default-src 'none'; connect-src 'self'; worker-src 'self'; manifest-src 'self';")
                 self.send(page,ctype='text/html; charset=utf-8');return
             if path=='/__ia/certificate' and self.command=='GET':self.send((ROOT/'lan-cert.pem').read_bytes(),ctype='application/x-pem-file',headers={'Content-Disposition':'attachment; filename="IA-Local-certificado.pem"'});return
             if path=='/__ia/bridge' and self.command=='POST':
@@ -251,7 +251,7 @@ class Gateway(BaseHTTPRequestHandler):
                         if not confirmed:self.send({'error':'Confirma tu código de verificación para continuar.','code':'step_up_required'},403);return
                     self.send(self.server.dispatch(action,value.get('value'),value.get('engine'),actor=user['name']));return
                 if method!='GET':raise ValueError('Método no permitido.')
-                result=http('http://127.0.0.1:8040',path,timeout=15,headers={'Authorization':'Bearer '+(ROOT/'token').read_text()})
+                result=http('http://127.0.0.1:8040',path,timeout=15,headers={'Authorization':'Bearer '+(ROOT/'token').read_text(encoding='utf-8')})
                 if path=='/status':
                     result['remote']={'user':user['name'],'role':user['role'],'second_factor':security_status(user['name'])['enabled']}
                     if user['role']!='admin':result.get('lan',{}).pop('users',None)

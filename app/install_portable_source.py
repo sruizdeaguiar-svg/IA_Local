@@ -19,7 +19,7 @@ def install(destination,data,desktop=False):
         from install_clean import BACKEND_FILES
         for name in (*BACKEND_FILES,'install_clean.py','portable_launcher.py','IA.ico','requirements.txt'):
             shutil.copy2(HERE/name,destination/name)
-        (destination/'requirements-source.txt').write_text('-r requirements.txt\ncryptography>=46.0.0,<48\n')
+        (destination/'requirements-source.txt').write_text('-r requirements.txt\ncryptography>=46.0.0,<48\n',encoding='utf-8')
         venv.create(destination/'.venv',with_pip=True)
         python=destination/('.venv/Scripts/python.exe' if os.name=='nt' else '.venv/bin/python')
         subprocess.run([str(python),'-m','pip','install','--index-url','https://pypi.org/simple','-r',str(destination/'requirements-source.txt')],check=True)
@@ -39,10 +39,10 @@ def install(destination,data,desktop=False):
             def desktop_quote(s):return '"'+str(s).replace('\\','\\\\').replace('"','\\"').replace('`','\\`').replace('$','\\$').replace('%','%%')+'"'
             entry='[Desktop Entry]\nType=Application\nName=IA Local\nExec='+desktop_quote(python)+' '+desktop_quote(destination/'portable_launcher.py')+' --data '+desktop_quote(data)+'\nIcon='+str(destination/'icon-512.png')+'\nTerminal=false\nCategories=Utility;Development;\n'
             target=Path.home()/'.local/share/applications/ia-local.desktop';target.parent.mkdir(parents=True,exist_ok=True)
-            if not target.exists():target.write_text(entry);target.chmod(0o700)
+            if not target.exists():target.write_text(entry,encoding='utf-8');target.chmod(0o700)
             if desktop and (Path.home()/'Desktop').is_dir():
                 target=Path.home()/'Desktop/IA Local.desktop'
-                if not target.exists():target.write_text(entry);target.chmod(0o700)
+                if not target.exists():target.write_text(entry,encoding='utf-8');target.chmod(0o700)
         print('Instalación de código completada. Lanzar: '+str(python)+' '+str(destination/'portable_launcher.py')+' --data '+str(data))
     except Exception:
         # Partial app files are harmless and retained for diagnosis; never remove data.

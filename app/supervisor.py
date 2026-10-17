@@ -108,7 +108,7 @@ def job(action,value=None,engine=None,actor='Mac'):
                         p=ROOT/'logs'/(s+'.log')
                         if p.exists():
                             text=p.read_bytes()[-24000:].decode('utf-8',errors='replace')
-                            token=(ROOT/'token').read_text();text=text.replace(token,'[privado]')
+                            token=(ROOT/'token').read_text(encoding='utf-8');text=text.replace(token,'[privado]')
                             text='\n'.join('[Línea con credenciales omitida]' if re.search(r'api[_ -]?key|authorization|bearer|password|license|setup.?code|auth/connect|sk-[a-zA-Z0-9]|freellmapi-[a-f0-9]{20,}',line,re.I) else line for line in text.splitlines()[-100:])
                             logs[s]=text
                     result={'message':'Registros disponibles; líneas con credenciales omitidas.','diagnostic':logs}
@@ -256,7 +256,7 @@ class Handler(BaseHTTPRequestHandler):
         b=json.dumps(d,ensure_ascii=False).encode();self.send_response(code);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(b)));self.send_header('Cache-Control','no-store');self.end_headers();self.wfile.write(b)
     def auth(self):
         host=self.headers.get('Host','').split(':')[0]
-        return host in ('127.0.0.1','localhost') and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+(ROOT/'token').read_text())
+        return host in ('127.0.0.1','localhost') and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+(ROOT/'token').read_text(encoding='utf-8'))
     def do_GET(self):
         if not self.auth():self.send({'error':'No autorizado'},401);return
         path=urllib.parse.urlsplit(self.path).path

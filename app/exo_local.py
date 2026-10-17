@@ -33,7 +33,7 @@ def local_api_init(self,*args,**kwargs):
         if request.method=='POST' and request.url.path in ('/instance','/place_instance'):
             import json
             active_file=ROOT/'active.json'
-            active=json.loads(active_file.read_text()) if active_file.exists() else {}
+            active=json.loads(active_file.read_text(encoding='utf-8')) if active_file.exists() else {}
             if active.get('id') and active.get('engine')!='exo':return JSONResponse({'error':'Libera el modelo del otro motor en IA Local antes de cargar EXO.'},409)
             if self.state.instances:return JSONResponse({'error':'Solo se permite una instancia. Elimina la actual antes de cambiar de modelo.'},409)
         return await call_next(request)
@@ -43,12 +43,12 @@ def prepare_catalog():
     import json
     from exo.shared.models.model_cards import ModelCard
     directory=ROOT/'exo-models-readonly';directory.mkdir(exist_ok=True)
-    catalog=json.loads((ROOT/'catalog.json').read_text());mapped={}
+    catalog=json.loads((ROOT/'catalog.json').read_text(encoding='utf-8'));mapped={}
     async def save():
         for model in catalog['models']:
             path=Path(model.get('path','/nonexistent'))
             if model.get('format') not in ('MLX','Safetensors') or not (path/'config.json').is_file():continue
-            cfg=json.loads((path/'config.json').read_text())
+            cfg=json.loads((path/'config.json').read_text(encoding='utf-8'))
             if cfg.get('model_type') not in ('qwen2','qwen3','qwen3_moe'):continue
             if not cfg.get('num_hidden_layers') or not cfg.get('hidden_size'):continue
             alias='IA-Local/'+model['id'];target=directory/alias.replace('/','--')
@@ -66,12 +66,12 @@ def prepare_catalog():
                     if length>64*2**20:raise ValueError('Cabecera safetensors excesiva.')
                     header=json.loads(weights.read(length))
                 mapping={name:'model.safetensors' for name in header if name!='__metadata__'}
-                (target/'model.safetensors.index.json').write_text(json.dumps({'metadata':{'total_size':model['bytes']},'weight_map':mapping}))
+                (target/'model.safetensors.index.json').write_text(json.dumps({'metadata':{'total_size':model['bytes']},'weight_map':mapping}),encoding='utf-8')
             elif not target.exists():target.symlink_to(path,target_is_directory=True)
             card=ModelCard(model_id=alias,storage_size={'in_bytes':model['bytes']},n_layers=cfg['num_hidden_layers'],hidden_size=cfg['hidden_size'],supports_tensor=False,num_key_value_heads=cfg.get('num_key_value_heads'),context_length=model['context'],trust_remote_code=False,tasks=['TextGeneration'],is_custom=True)
             await card.save_to_custom_dir();mapped[model['id']]=alias
     anyio.run(save)
-    (ROOT/'exo-catalog.json').write_text(json.dumps(mapped))
+    (ROOT/'exo-catalog.json').write_text(json.dumps(mapped),encoding='utf-8')
     return mapped
 
 if __name__=="__main__":

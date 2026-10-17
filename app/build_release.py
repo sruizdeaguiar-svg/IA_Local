@@ -39,6 +39,6 @@ def build(runtime,out):
     command(['ditto','-c','-k','--norsrc','--keepParent',app,installer/'Contents/Resources/payload.zip']);command(['codesign','--force','--sign','-',installer]);command(['codesign','--verify','--deep','--strict',installer])
     archive=out/'IA-Local-1.2.0-macOS-arm64.zip';command(['ditto','-c','-k','--norsrc','--keepParent',installer,archive])
     manifest={'version':'1.2.0','platform':'macOS arm64','archive':archive.name,'sha256':hashlib.sha256(archive.read_bytes()).hexdigest(),'payload_files':list(BACKEND_FILES),'configured':False,'signing':'ad-hoc; no Developer ID notarization'}
-    (out/'release-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n');print(json.dumps(manifest,indent=2));return archive
+    (out/'release-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8');print(json.dumps(manifest,indent=2));return archive
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--runtime',required=True);p.add_argument('--out',default=str(Path(tempfile.gettempdir())/'IA-Local-release'));a=p.parse_args();build(a.runtime,a.out)

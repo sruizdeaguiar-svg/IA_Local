@@ -167,7 +167,7 @@ def anthropic_chunks(response):
 class Proxy(BaseHTTPRequestHandler):
     protocol_version='HTTP/1.1'
     def log_message(self,*a):pass
-    def authorized(self):return self.headers.get('Host','').split(':')[0] in ('127.0.0.1','localhost') and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+(ROOT/'token').read_text())
+    def authorized(self):return self.headers.get('Host','').split(':')[0] in ('127.0.0.1','localhost') and secrets.compare_digest(self.headers.get('Authorization',''),'Bearer '+(ROOT/'token').read_text(encoding='utf-8'))
     def send_json(self,d,status=200):
         b=json.dumps(d).encode();self.send_response(status);self.send_header('Content-Type','application/json');self.send_header('Content-Length',str(len(b)));self.end_headers();self.wfile.write(b)
     def do_GET(self):
@@ -208,7 +208,7 @@ def view():return [{**d,'has_key':bool(read(ROOT/'external-credentials.json',{})
 def import_freellmapi():
     path=ROOT/'freellmapi-data.sqlite'
     if not path.exists():raise RuntimeError('FreeLLMAPI no está configurado en esta instalación.')
-    with sqlite3.connect(path) as connection:row=connection.execute("SELECT value FROM settings WHERE key='unified_api_key'").fetchone()
+    with contextlib.closing(sqlite3.connect(path)) as connection:row=connection.execute("SELECT value FROM settings WHERE key='unified_api_key'").fetchone()
     if not row:raise RuntimeError('FreeLLMAPI no tiene una clave de cliente guardada.')
     current=definition('cloud-freellmapi');port=current['port'] if current else next(p for p in range(8050,8400) if p not in PORTS.values() and p not in AUX_PORTS.values() and not port_open(p))
     return register({'id':'cloud-freellmapi','name':'FreeLLMAPI','preset':'freellmapi','protocol':'openai','base_url':'http://127.0.0.1:8043/v1','port':port,'context':4096,'models':['auto','auto:fast'],'api_key':row[0]})

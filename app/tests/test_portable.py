@@ -13,7 +13,7 @@ class PortableHTTP(unittest.TestCase):
   # Discover only our exact child command/creation identity for teardown.
   import psutil
   cls.server=next(p for p in psutil.process_iter(['cmdline']) if p.info['cmdline'] and '--serve' in p.info['cmdline'] and str(cls.root) in p.info['cmdline'])
-  cls.token=(cls.root/'token').read_text()
+  cls.token=(cls.root/'token').read_text(encoding='utf-8')
   cls.opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
  @classmethod
  def tearDownClass(cls):

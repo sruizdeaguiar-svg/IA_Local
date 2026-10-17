@@ -25,7 +25,7 @@ def install(payload_app,applications,data,desktop=False,port=8040):
             if not src.is_file():raise FileNotFoundError('Falta un archivo del paquete: '+file)
             shutil.copy2(src,data/file);(data/file).chmod(0o600)
         def write(name,obj):
-            path=data/name;path.write_text(json.dumps(obj,ensure_ascii=False,indent=2));path.chmod(0o600)
+            path=data/name;path.write_text(json.dumps(obj,ensure_ascii=False,indent=2),encoding='utf-8');path.chmod(0o600)
         write('installation.json',{'clean':True,'detached':True,'linked_services':[],'version':'1.2.0','layout':'user-selected','python':'bundled'})
         write('catalog.json',{'time':0,'models':[],'errors':[]})
         write('settings.json',{'language':'es','theme':'auto','poll_seconds':2,'watch_models':False,'watch_integrations':True,'integration_scan_seconds':300,'daily_updates':False,'update_hours':24,'model_dirs':[]})

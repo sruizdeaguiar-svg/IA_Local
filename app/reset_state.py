@@ -24,7 +24,7 @@ def snapshot(prefix='reset-'):
         if p.is_file() and not p.is_symlink():shutil.copy2(p,folder/name);os.chmod(folder/name,0o600);names.append(name)
     for name in DB_STATE:
         if not (ROOT/name).exists():continue
-        with sqlite3.connect(ROOT/name) as source,sqlite3.connect(folder/name) as dest:source.backup(dest)
+        with contextlib.closing(sqlite3.connect(ROOT/name)) as source,contextlib.closing(sqlite3.connect(folder/name)) as dest:source.backup(dest)
         os.chmod(folder/name,0o600);names.append(name)
     write(folder/'manifest.json',{'time':time.time(),'files':{n:hashlib.sha256((folder/n).read_bytes()).hexdigest() for n in names},'scope':'IA Local only; no model weights, installed runtimes or agent conversations'})
     return folder
@@ -57,7 +57,7 @@ def detach(value,progress):
     with lan.access_db() as c:
         for table in ('stepups','sessions','totp','users'):c.execute('DELETE FROM '+table)
     with db() as c:c.execute('DELETE FROM events');c.execute('DELETE FROM results')
-    token=ROOT/'token';token.write_text(secrets.token_urlsafe(40));token.chmod(0o600)
+    token=ROOT/'token';token.write_text(secrets.token_urlsafe(40),encoding='utf-8');token.chmod(0o600)
     event('application-reset',{'backup':folder.name,'programs_preserved':True})
     return {'message':'IA Local restablecida: sin instalaciones vinculadas, usuarios ni preferencias personales. Programas, modelos y conversaciones conservados. El acceso web está desactivado. Recupera la copia desde el Mac si lo necesitas.','backup':str(folder),'reset':True}
 
@@ -76,19 +76,19 @@ def restore(progress):
     lan.configure(False,lambda *args:None)
     for name in files:
         if name in DB_STATE:
-            with sqlite3.connect(folder/name) as source,sqlite3.connect(ROOT/name) as dest:source.backup(dest)
+            with contextlib.closing(sqlite3.connect(folder/name)) as source,contextlib.closing(sqlite3.connect(ROOT/name)) as dest:source.backup(dest)
         else:shutil.copy2(folder/name,ROOT/name)
         os.chmod(ROOT/name,0o600)
     for name in JSON_STATE:
         if name not in files:
-            if name.endswith('.ini'):(ROOT/name).write_text('')
+            if name.endswith('.ini'):(ROOT/name).write_text('',encoding='utf-8')
             else:write(ROOT/name,{'items':[]} if name in ('integrations.json','remote-servers.json','external-providers.json') else [] if name in ('remote-connections.json','optimizations.json','updates.json') else {})
     clear_sessions();write(ROOT/'active.json',{});write(ROOT/'processes.json',{});write(ROOT/'remote-connections.json',[])
     cfg=read(ROOT/'settings.json',{});cfg.update(lan_enabled=False,waiting=[]);write(ROOT/'settings.json',cfg)
     for sid in list(NAMES):
         if sid.startswith(('custom-','remote-','cloud-')):NAMES.pop(sid,None);PORTS.pop(sid,None)
     integrations.install_registry();remote_servers.install_registry();external_providers.install_registry()
-    token=ROOT/'token';token.write_text(secrets.token_urlsafe(40));token.chmod(0o600)
+    token=ROOT/'token';token.write_text(secrets.token_urlsafe(40),encoding='utf-8');token.chmod(0o600)
     return {'message':'Configuración y usuarios recuperados. Sesiones anteriores invalidadas; servicios y acceso LAN permanecen detenidos. Vuelve a sincronizar los perfiles de agentes si usaban la pasarela.','restored':True}
 
 def attach_known(sid):
