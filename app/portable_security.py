@@ -7,11 +7,22 @@ def secure_directory(path):
     """Restrict the data directory before credentials are created; fail closed."""
     path=Path(path);path.mkdir(parents=True,exist_ok=True)
     if os.name!='nt':path.chmod(0o700);return
-    # An explicit SID avoids localization and ambiguous domain/user account names.
-    result=process_runtime.run(['whoami','/user','/fo','csv','/nh'],capture_output=True,text=True,check=True)
-    sid=re.search(r'S-1-5-[0-9-]+',result.stdout)
+    # Replace the complete DACL. Merely granting/removing inheritance can retain
+    # explicit broad entries from a pre-existing temporary/user directory.
+    result=process_runtime.run(['whoami','/user','/fo','csv','/nh'],capture_output=True,check=True)
+    sid=re.search(rb'S-1-5-[0-9-]+',result.stdout)
     if not sid:raise RuntimeError('No se pudo identificar el usuario de Windows para proteger los datos.')
-    process_runtime.run(['icacls',str(path),'/inheritance:r','/grant:r','*'+sid[0]+':(OI)(CI)F','*S-1-5-18:(OI)(CI)F'],capture_output=True,check=True)
+    import ctypes
+    from ctypes import wintypes
+    api=ctypes.windll.advapi32;kernel=ctypes.windll.kernel32
+    descriptor=ctypes.c_void_p();dacl=ctypes.c_void_p();present=wintypes.BOOL();defaulted=wintypes.BOOL()
+    sddl='D:P(A;OICI;FA;;;'+sid[0].decode('ascii')+')(A;OICI;FA;;;SY)'
+    if not api.ConvertStringSecurityDescriptorToSecurityDescriptorW(ctypes.c_wchar_p(sddl),1,ctypes.byref(descriptor),None):raise OSError('No se pudo preparar la protección NTFS.')
+    try:
+        if not api.GetSecurityDescriptorDacl(descriptor,ctypes.byref(present),ctypes.byref(dacl),ctypes.byref(defaulted)) or not present.value:raise OSError('DACL NTFS no válida.')
+        status=api.SetNamedSecurityInfoW(ctypes.c_wchar_p(str(path)),1,wintypes.DWORD(0x80000004),None,None,dacl,None)
+        if status:raise OSError(status,'No se pudieron proteger los datos con permisos del usuario y SYSTEM.')
+    finally:kernel.LocalFree(descriptor)
 
 def certificate(root,ip):
     """Generate a private P-256 self-signed certificate; trust remains a user action."""
