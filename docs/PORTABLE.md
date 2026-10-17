@@ -2,7 +2,7 @@
 
 ES: gestor por usuario para servidores de IA, agentes HTTP, modelos y conexiones explícitas LAN/nube. Usa el mismo panel que macOS. No incluye motores, pesos ni configuración personal. EN: per-user AI manager sharing the macOS panel; no engines, model weights or personal configuration bundled.
 
-Native executable builds and installed-panel checks passed on Windows x64 and Ubuntu 22.04 x86_64: [CI evidence](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39062732232). These are isolated HTTP/browser fixtures, not GPU model inference.
+Native executable builds and installed-panel checks passed on Windows x64 and Ubuntu 22.04 x86_64: [CI evidence](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39063504655). These are isolated HTTP/browser fixtures, not GPU model inference.
 
 ## Source editions / Ediciones de código
 

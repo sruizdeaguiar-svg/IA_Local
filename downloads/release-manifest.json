@@ -2,7 +2,7 @@
   "version": "1.2.0",
   "platform": "macOS arm64",
   "archive": "IA-Local-1.2.0-macOS-arm64.zip",
-  "sha256": "b32e9e96d608f5fa24eea89cfbbdac0e7757bc1b5422b69049bcb46fb6e75b41",
+  "sha256": "dfc807eaa572af65dd287883a160282047da087e6dcd1cfd896615020a0d1fdb",
   "payload_files": [
     "process_runtime.py",
     "desktop_server.py",

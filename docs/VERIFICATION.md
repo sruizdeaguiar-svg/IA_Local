@@ -5,7 +5,7 @@ Evidence recorded on 2026-10-17. The reference machine is a Mac mini M4 Pro, 24 
 ## Automated
 
 - 49 isolated Python tests: account/TOTP replay, aggregation denominators, comparison validity, streaming fragmentation, evaluation/optimization sequences, cancellation, port conflicts, update rollback, agent profile preservation, integration schema, private LAN targets, external protocol conversion, full reset/recovery, real portable HTTP session and owned parent/child process teardown.
-- Shared UI Node checks: state-dependent controls, navigation/ES-EN names, model/context comparison refresh, sequential evaluation/optimization, bounded notifications and complete detail.
+- Shared UI Node checks: repeated-render agent buttons require a valid active model, Hermes context and administrator role; state-dependent controls, navigation/ES-EN names, model/context comparison refresh, sequential evaluation/optimization, bounded notifications and complete detail.
 - Python compile and extracted shared JavaScript syntax validation.
 - Temporary test profiles are created before importing core. Real process tests use synthetic processes; an unrelated process must survive teardown.
 
@@ -23,7 +23,7 @@ Evidence recorded on 2026-10-17. The reference machine is a Mac mini M4 Pro, 24 
 
 ## Windows / Linux target-system CI
 
-[Successful candidate run](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39062732232) on Windows x64 and Ubuntu 22.04 x86_64: 49 isolated Python tests (the optional legacy Strata-shortcut test is skipped when those external scripts are absent), shared UI Node checks, real target-OS native builds, frozen executable health/import smoke, installation in a selected folder containing spaces, refusal to overwrite it, and real Chromium headless panel flows. The browser uses the installed executable, registers/starts/stops a synthetic HTTP agent, checks all tabs and ES/EN help, disabled Apple-only controls, full reset and recovery. Screenshots and result JSON accompany the CI artifacts.
+[Successful candidate run](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39063504655) on Windows x64 and Ubuntu 22.04 x86_64: 49 isolated Python tests (the optional legacy Strata-shortcut test is skipped when those external scripts are absent), shared UI Node checks, real target-OS native builds, frozen executable health/import smoke, installation in a selected folder containing spaces, refusal to overwrite it, and real Chromium headless panel flows. The browser uses the installed executable, registers/starts/stops a synthetic HTTP agent, checks all tabs and ES/EN help, disabled Apple-only controls, full reset and recovery. Screenshots and result JSON accompany the CI artifacts.
 
 These CI tests do not prove GPU inference, desktop shell UX, physical iPad operation or external account generation. Source-edition installer scripts are supplied separately; their complete dependency-download flow has not been run as a separate target-OS installation.
 

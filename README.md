@@ -36,7 +36,7 @@ Consulta [VERIFICATION.md](docs/VERIFICATION.md) antes de interpretar una funci�
 - [Windows · instalador desde código, requiere Python 3.12+](downloads/IA-Local-1.2.0-Windows-source.zip)
 - [Linux · instalador desde código, requiere Python 3.12+](downloads/IA-Local-1.2.0-Linux-source.zip)
 
-Los paquetes `source` son ediciones de código con entorno Python propio; no son ejecutables nativos ya probados. Sus instaladores descargan dependencias desde PyPI. Los ejecutables nativos incluyen Python y pasan [pruebas en sus respectivos sistemas](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39062732232). La [publicación 1.2.0](https://github.com/sruizdeaguiar-svg/IA_Local/releases/tag/v1.2.0) incluye las sumas SHA-256. Windows no tiene firma Authenticode.
+Los paquetes `source` son ediciones de código con entorno Python propio; no son ejecutables nativos ya probados. Sus instaladores descargan dependencias desde PyPI. Los ejecutables nativos incluyen Python y pasan [pruebas en sus respectivos sistemas](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39063504655). La [publicación 1.2.0](https://github.com/sruizdeaguiar-svg/IA_Local/releases/tag/v1.2.0) incluye las sumas SHA-256. Windows no tiene firma Authenticode.
 
 ## Instalación limpia en macOS
 
