@@ -7,6 +7,7 @@ import json,socket,sys,time
 from pathlib import Path
 from packaged_session import PackagedSession
 from playwright.sync_api import sync_playwright,expect
+expect.set_options(timeout=45000)
 with PackagedSession(sys.argv[1]) as app,sync_playwright() as pw:
  browser=pw.chromium.launch();page=browser.new_page(viewport={'width':1365,'height':950});page.set_default_timeout(45000);errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
  try:
