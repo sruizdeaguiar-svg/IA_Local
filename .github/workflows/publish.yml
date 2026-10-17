@@ -1,0 +1,54 @@
+name: Publish verified release
+on:
+  workflow_run:
+    workflows: ['Portable Windows and Linux']
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  release:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: IA-Local-*
+          path: release-assets
+      - name: Publish only the tested packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=v1.2.0
+          if gh release view "$version" >/dev/null 2>&1; then
+            echo 'Existing release preserved; no assets are overwritten.'
+            exit 0
+          fi
+          mapfile -t windows < <(find release-assets -type f -name 'IA-Local-1.2.0-Windows-x64.zip')
+          mapfile -t linux < <(find release-assets -type f -name 'IA-Local-1.2.0-Linux-x86_64.zip')
+          test "${#windows[@]}" = 1
+          test "${#linux[@]}" = 1
+          mac=downloads/IA-Local-1.2.0-macOS-arm64.zip
+          test -f "$mac"
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          files=list(Path('release-assets').rglob('IA-Local-*.zip'))+list(Path('downloads').glob('IA-Local-*.zip'))
+          Path('release-assets/SHA256SUMS.txt').write_text(''.join(hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.name+'\n' for p in sorted(files)),encoding='utf-8')
+          PY
+          gh release create "$version" "$mac" "${windows[0]}" "${linux[0]}" \
+            downloads/IA-Local-1.2.0-Windows-source.zip downloads/IA-Local-1.2.0-Linux-source.zip \
+            release-assets/SHA256SUMS.txt \
+            --target "$SOURCE_SHA" --title 'IA Local 1.2.0' --notes-file docs/RELEASE_NOTES.md

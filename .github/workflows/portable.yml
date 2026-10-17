@@ -29,10 +29,12 @@ jobs:
       - run: python app/build_portable.py --out dist/portable
       - name: Smoke test packaged executable
         run: python app/tests/smoke_packaged.py dist/portable/bin
+      - name: Install package in selected directory
+        run: python app/tests/install_packaged.py dist/portable 'dist/installed with spaces'
       - run: python -m pip install playwright==1.64.0
       - run: python -m playwright install --with-deps chromium
       - name: Browser E2E of packaged application
-        run: python app/tests/browser_packaged.py dist/portable/bin
+        run: python app/tests/browser_packaged.py 'dist/installed with spaces'
       - uses: actions/upload-artifact@v4
         with:
           name: IA-Local-${{ matrix.os }}
