@@ -1,0 +1,14 @@
+[
+  {
+    "archive": "IA-Local-1.2.0-Windows-source.zip",
+    "sha256": "41c32293aca74eb1ba03cb375a1062de61c3e709541896eaf7d36dd231a06d49",
+    "edition": "source installer; Python 3.12+ required",
+    "native_runtime_verified": false
+  },
+  {
+    "archive": "IA-Local-1.2.0-Linux-source.zip",
+    "sha256": "2b1fbe098a8730b447d7b27a464972a167b49f4ed889d11f456dcc5101e902ec",
+    "edition": "source installer; Python 3.12+ required",
+    "native_runtime_verified": false
+  }
+]

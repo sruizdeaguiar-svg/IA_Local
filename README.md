@@ -23,18 +23,20 @@ Un panel para gestionar tu entorno de IA: servidores locales, agentes, modelos y
 | Plataforma | Interfaz | Alcance |
 |---|---|---|
 | macOS 14+, Apple Silicon | App Swift/WKWebView y web | Instalador limpio compilado, instalado y probado en un Mac M4 Pro. Adaptadores de las instalaciones existentes; ayudante iogpu limitado y separado. |
-| Windows x64 | Lanzador y navegador | Código portable y empaquetador PyInstaller. Validación del ejecutable en Windows pendiente hasta completar CI. No contiene motores Metal ni ayudante macOS. |
-| Linux x86_64 | Lanzador y navegador | Código portable y empaquetador PyInstaller. Validación del ejecutable en Linux pendiente hasta completar CI. Requiere navegador/sesión gráfica para el panel. |
+| Windows x64 | Lanzador y navegador | Ejecutable generado y probado en Windows CI: instalación elegida, salud y panel Chromium headless. No contiene motores Metal ni ayudante macOS. |
+| Linux x86_64 | Lanzador y navegador | Ejecutable generado y probado en Ubuntu 22.04 CI: instalación elegida, salud y panel Chromium headless. Requiere navegador/sesión gráfica para el panel. |
 
-Consulta [VERIFICATION.md](docs/VERIFICATION.md) antes de interpretar una función como probada. Los binarios macOS llevan firma ad hoc, sin notarización Developer ID. Los paquetes Windows/Linux no se presentan como terminados hasta pasar sus pruebas de sistema.
+Consulta [VERIFICATION.md](docs/VERIFICATION.md) antes de interpretar una función como probada. Los binarios macOS llevan firma ad hoc, sin notarización Developer ID. Los paquetes Windows/Linux han pasado sus pruebas de sistema en CI; la inferencia GPU necesita el motor y hardware del usuario.
 
 ## Descargas
 
 - [macOS Apple Silicon · instalador limpio](downloads/IA-Local-1.2.0-macOS-arm64.zip)
+- [Windows x64 · ejecutable con Python incluido](https://github.com/sruizdeaguiar-svg/IA_Local/releases/download/v1.2.0/IA-Local-1.2.0-Windows-x64.zip)
+- [Linux x86_64 · ejecutable con Python incluido](https://github.com/sruizdeaguiar-svg/IA_Local/releases/download/v1.2.0/IA-Local-1.2.0-Linux-x86_64.zip)
 - [Windows · instalador desde código, requiere Python 3.12+](downloads/IA-Local-1.2.0-Windows-source.zip)
 - [Linux · instalador desde código, requiere Python 3.12+](downloads/IA-Local-1.2.0-Linux-source.zip)
 
-Los paquetes `source` son ediciones de código con entorno Python propio; no son ejecutables nativos ya probados. Sus instaladores descargan dependencias desde PyPI. La compilación EXE/binaria se prepara con GitHub Actions y se verificará en cada SO antes de declararla lista.
+Los paquetes `source` son ediciones de código con entorno Python propio; no son ejecutables nativos ya probados. Sus instaladores descargan dependencias desde PyPI. Los ejecutables nativos incluyen Python y pasan [pruebas en sus respectivos sistemas](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39062732232). La [publicación 1.2.0](https://github.com/sruizdeaguiar-svg/IA_Local/releases/tag/v1.2.0) incluye las sumas SHA-256. Windows no tiene firma Authenticode.
 
 ## Instalación limpia en macOS
 

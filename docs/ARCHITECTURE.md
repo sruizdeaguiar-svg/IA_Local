@@ -73,3 +73,7 @@ The original adapters retain support for an existing Strata/M4 Pro layout. Clean
 `reset_state.py` snapshots allowlisted configuration and consistent SQLite backups with a SHA-256 manifest. Reset stops only unchanged managed identities, disconnects providers, clears active users/preferences and rotates the local token. It preserves programs, weights and agent conversations. Recovery first checks integrity and backs up current state; it invalidates sessions and leaves services/LAN stopped.
 
 Native Apple adapters and iogpu are unavailable on portable systems. Custom adapters are declared compatibility until actual inference passes. GPU telemetry uses macOS driver counters or optional nvidia-smi; missing counters remain null. No universal updater or engine installer is implied by a generic integration.
+
+## Frozen portable process environment
+
+The portable supervisor is launched as an independent instance with `PYINSTALLER_RESET_ENVIRONMENT=1`, so its runtime files survive closure of the initial launcher. `process_runtime.py` restores original external library-search variables and temporarily resets the Windows DLL directory when creating an engine/agent process. The app restores its loader context afterward. This follows PyInstaller's documented separation between independent instances and workers. The packaged smoke test performs a late GGUF import after the launcher exits; browser E2E starts and stops a synthetic external HTTP agent.

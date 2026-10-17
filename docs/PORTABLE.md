@@ -2,9 +2,11 @@
 
 ES: gestor por usuario para servidores de IA, agentes HTTP, modelos y conexiones explícitas LAN/nube. Usa el mismo panel que macOS. No incluye motores, pesos ni configuración personal. EN: per-user AI manager sharing the macOS panel; no engines, model weights or personal configuration bundled.
 
+Native executable builds and installed-panel checks passed on Windows x64 and Ubuntu 22.04 x86_64: [CI evidence](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39062732232). These are isolated HTTP/browser fixtures, not GPU model inference.
+
 ## Source editions / Ediciones de código
 
-`IA-Local-1.2.0-Windows-source.zip` and `IA-Local-1.2.0-Linux-source.zip` are clean source installers, not EXE/native binaries. They require Python 3.12+ already installed and Internet access to install Python dependencies from official PyPI into their own virtualenv. No engine or model is downloaded. Windows: run `./Instalar.ps1 -Destination "D:\Apps\IA Local" -DataDirectory "D:\IA Local Data"`. Linux: `sh instalar.sh "$HOME/.local/opt/ia-local" "$HOME/.local/share/IA-Local"`. The scripts preserve existing directories and create a per-user shortcut. Target-OS runtime verification remains pending; source/HTTP tests have run on macOS.
+`IA-Local-1.2.0-Windows-source.zip` and `IA-Local-1.2.0-Linux-source.zip` are clean source installers, not EXE/native binaries. They require Python 3.12+ already installed and Internet access to install Python dependencies from official PyPI into their own virtualenv. No engine or model is downloaded. Windows: run `./Instalar.ps1 -Destination "D:\Apps\IA Local" -DataDirectory "D:\IA Local Data"`. Linux: `sh instalar.sh "$HOME/.local/opt/ia-local" "$HOME/.local/share/IA-Local"`. The scripts preserve existing directories and create a per-user shortcut. The separate native executable/installer/browser workflow is verified on target-OS CI; the complete source-edition dependency-download installation has not been separately run.
 
 ## Windows 11 x64
 

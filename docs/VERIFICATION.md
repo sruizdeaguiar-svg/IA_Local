@@ -4,7 +4,7 @@ Evidence recorded on 2026-10-17. The reference machine is a Mac mini M4 Pro, 24 
 
 ## Automated
 
-- 48 isolated Python tests: account/TOTP replay, aggregation denominators, comparison validity, streaming fragmentation, evaluation/optimization sequences, cancellation, port conflicts, update rollback, agent profile preservation, integration schema, private LAN targets, external protocol conversion, full reset/recovery, real portable HTTP session and owned parent/child process teardown.
+- 49 isolated Python tests: account/TOTP replay, aggregation denominators, comparison validity, streaming fragmentation, evaluation/optimization sequences, cancellation, port conflicts, update rollback, agent profile preservation, integration schema, private LAN targets, external protocol conversion, full reset/recovery, real portable HTTP session and owned parent/child process teardown.
 - Shared UI Node checks: state-dependent controls, navigation/ES-EN names, model/context comparison refresh, sequential evaluation/optimization, bounded notifications and complete detail.
 - Python compile and extracted shared JavaScript syntax validation.
 - Temporary test profiles are created before importing core. Real process tests use synthetic processes; an unrelated process must survive teardown.
@@ -21,9 +21,14 @@ Evidence recorded on 2026-10-17. The reference machine is a Mac mini M4 Pro, 24 
 - Real OpenCode AI configuration proposal completed using an isolated local profile. Hermes was invoked through an isolated profile; invalid model-generated configuration was rejected. A valid Hermes-generated integration proposal is not claimed.
 - The existing native/HTTPS application has prior functional evidence for streaming, model/context selection, shared evaluation controls, remote agent interfaces, GPU helper read/apply/restore and administrator second-factor paths. Not every engine/model/driver combination was rerun for this release.
 
-## Still requires target-platform or account evidence
+## Windows / Linux target-system CI
 
-- Windows and Linux executable compilation/runtime, package installation and browser use on those operating systems remain pending until their CI/manual checks finish. The included workflow builds/tests both and smoke-tests actual frozen binaries. Do not relabel pending checks as passed from source tests on macOS.
+[Successful candidate run](https://github.com/sruizdeaguiar-svg/IA_Local/actions/runs/39062732232) on Windows x64 and Ubuntu 22.04 x86_64: 49 isolated Python tests (the optional legacy Strata-shortcut test is skipped when those external scripts are absent), shared UI Node checks, real target-OS native builds, frozen executable health/import smoke, installation in a selected folder containing spaces, refusal to overwrite it, and real Chromium headless panel flows. The browser uses the installed executable, registers/starts/stops a synthetic HTTP agent, checks all tabs and ES/EN help, disabled Apple-only controls, full reset and recovery. Screenshots and result JSON accompany the CI artifacts.
+
+These CI tests do not prove GPU inference, desktop shell UX, physical iPad operation or external account generation. Source-edition installer scripts are supplied separately; their complete dependency-download flow has not been run as a separate target-OS installation.
+
+## Still requires hardware or account evidence
+
 - No physical iPad was available for this release's final checks. Shared web behavior and responsive layout do not prove an installed iPad PWA flow.
 - No external OpenAI/Anthropic/Kimi/DeepSeek account generation or billing entitlement verified here. Protocol tests are isolated synthetic tests; a successful model inventory does not prove generation availability.
 - NVIDIA/ROCm GPU behavior and every generic engine adapter require their actual hardware/runtime. Missing telemetry remains unknown. macOS iogpu does not exist on portable platforms.

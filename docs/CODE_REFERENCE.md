@@ -21,55 +21,70 @@ This index covers every Python module-level function/class and class method in t
 
 ## Symbols by module
 
+### process_runtime.py
+
+Keep a frozen app's private loader paths out of external engine processes.
+
+PyInstaller changes library search paths for its bundled dependencies. External
+engines must use their own libraries. On Windows, serialize the short-lived
+SetDllDirectory override while creating a child, then restore the app's path.
+
+| Symbol / signature | Source |
+|---|---|
+| `environment(env=None)` | [implementation](../app/process_runtime.py#L10) |
+| `external_loader()` | [implementation](../app/process_runtime.py#L22) |
+| `popen(*args, **kwargs)` | [implementation](../app/process_runtime.py#L32) |
+| `run(*args, **kwargs)` | [implementation](../app/process_runtime.py#L36) |
+
 ### core.py
 
 Core lifecycle and inventory. Models stay in their original locations. Process identities, unique ports and a profile-scoped lock protect lifecycle operations; individual engine branches implement only verified native APIs.
 
 | Symbol / signature | Source |
 |---|---|
-| `own_process(p)` | [implementation](../app/core.py#L27) |
-| `executable_path(name)` | [implementation](../app/core.py#L30) |
-| `validate_ports(ports=None)` | [implementation](../app/core.py#L34) |
-| `listener_pids(port)` | [implementation](../app/core.py#L42) |
-| `expected_listener(service, pid)` | [implementation](../app/core.py#L50) |
-| `check_service_ports(service)` | [implementation](../app/core.py#L64) |
-| `init()` | [implementation](../app/core.py#L77) |
-| `db()` | [implementation](../app/core.py#L91) |
-| `event(kind, data)` | [implementation](../app/core.py#L96) |
-| `read(p, default=None)` | [implementation](../app/core.py#L98) |
-| `write(p, d)` | [implementation](../app/core.py#L101) |
-| `run(args, timeout=60, env=None)` | [implementation](../app/core.py#L103) |
-| `NoRedirect` | [implementation](../app/core.py#L108) |
-| `NoRedirect.redirect_request(self, *args, **kwargs)` | [implementation](../app/core.py#L109) |
-| `http(base, path, body=None, timeout=2, headers=None, text=False)` | [implementation](../app/core.py#L111) |
-| `probe(s, path='/v1/models')` | [implementation](../app/core.py#L116) |
-| `port_open(port)` | [implementation](../app/core.py#L134) |
-| `registered(label)` | [implementation](../app/core.py#L136) |
-| `identity(pid)` | [implementation](../app/core.py#L137) |
-| `same(d)` | [implementation](../app/core.py#L143) |
-| `ledger()` | [implementation](../app/core.py#L144) |
-| `set_process(key, d)` | [implementation](../app/core.py#L145) |
-| `lock(name='lifecycle')` | [implementation](../app/core.py#L153) |
-| `find(s)` | [implementation](../app/core.py#L171) |
-| `spawn(s, args, env=None)` | [implementation](../app/core.py#L195) |
-| `stop_process(s)` | [implementation](../app/core.py#L204) |
-| `wait(s, path='/v1/models', timeout=60)` | [implementation](../app/core.py#L231) |
-| `discover()` | [implementation](../app/core.py#L240) |
-| `fingerprint(m)` | [implementation](../app/core.py#L344) |
-| `engine_signature(engine)` | [implementation](../app/core.py#L349) |
-| `profile_for(m, engine)` | [implementation](../app/core.py#L355) |
-| `save_presets(rows=None, engine='llama')` | [implementation](../app/core.py#L359) |
-| `gguf_link(m)` | [implementation](../app/core.py#L368) |
-| `models()` | [implementation](../app/core.py#L376) |
-| `api_base(engine)` | [implementation](../app/core.py#L380) |
-| `get_model(mid)` | [implementation](../app/core.py#L385) |
-| `start(s)` | [implementation](../app/core.py#L391) |
-| `stop(s)` | [implementation](../app/core.py#L475) |
-| `available_services(include_unlinked=False)` | [implementation](../app/core.py#L527) |
-| `unload_all(except_engine=None)` | [implementation](../app/core.py#L534) |
-| `load(mid, engine)` | [implementation](../app/core.py#L552) |
-| `model_headers(engine)` | [implementation](../app/core.py#L651) |
-| `state()` | [implementation](../app/core.py#L661) |
+| `own_process(p)` | [implementation](../app/core.py#L28) |
+| `executable_path(name)` | [implementation](../app/core.py#L31) |
+| `validate_ports(ports=None)` | [implementation](../app/core.py#L35) |
+| `listener_pids(port)` | [implementation](../app/core.py#L43) |
+| `expected_listener(service, pid)` | [implementation](../app/core.py#L51) |
+| `check_service_ports(service)` | [implementation](../app/core.py#L65) |
+| `init()` | [implementation](../app/core.py#L78) |
+| `db()` | [implementation](../app/core.py#L96) |
+| `event(kind, data)` | [implementation](../app/core.py#L101) |
+| `read(p, default=None)` | [implementation](../app/core.py#L103) |
+| `write(p, d)` | [implementation](../app/core.py#L106) |
+| `run(args, timeout=60, env=None)` | [implementation](../app/core.py#L108) |
+| `NoRedirect` | [implementation](../app/core.py#L113) |
+| `NoRedirect.redirect_request(self, *args, **kwargs)` | [implementation](../app/core.py#L114) |
+| `http(base, path, body=None, timeout=2, headers=None, text=False)` | [implementation](../app/core.py#L116) |
+| `probe(s, path='/v1/models')` | [implementation](../app/core.py#L121) |
+| `port_open(port)` | [implementation](../app/core.py#L139) |
+| `registered(label)` | [implementation](../app/core.py#L141) |
+| `identity(pid)` | [implementation](../app/core.py#L142) |
+| `same(d)` | [implementation](../app/core.py#L148) |
+| `ledger()` | [implementation](../app/core.py#L149) |
+| `set_process(key, d)` | [implementation](../app/core.py#L150) |
+| `lock(name='lifecycle')` | [implementation](../app/core.py#L158) |
+| `find(s)` | [implementation](../app/core.py#L176) |
+| `spawn(s, args, env=None)` | [implementation](../app/core.py#L200) |
+| `stop_process(s)` | [implementation](../app/core.py#L209) |
+| `wait(s, path='/v1/models', timeout=60)` | [implementation](../app/core.py#L236) |
+| `discover()` | [implementation](../app/core.py#L245) |
+| `fingerprint(m)` | [implementation](../app/core.py#L349) |
+| `engine_signature(engine)` | [implementation](../app/core.py#L354) |
+| `profile_for(m, engine)` | [implementation](../app/core.py#L360) |
+| `save_presets(rows=None, engine='llama')` | [implementation](../app/core.py#L364) |
+| `gguf_link(m)` | [implementation](../app/core.py#L373) |
+| `models()` | [implementation](../app/core.py#L381) |
+| `api_base(engine)` | [implementation](../app/core.py#L385) |
+| `get_model(mid)` | [implementation](../app/core.py#L390) |
+| `start(s)` | [implementation](../app/core.py#L396) |
+| `stop(s)` | [implementation](../app/core.py#L480) |
+| `available_services(include_unlinked=False)` | [implementation](../app/core.py#L532) |
+| `unload_all(except_engine=None)` | [implementation](../app/core.py#L539) |
+| `load(mid, engine)` | [implementation](../app/core.py#L557) |
+| `model_headers(engine)` | [implementation](../app/core.py#L656) |
+| `state()` | [implementation](../app/core.py#L666) |
 
 ### supervisor.py
 
@@ -100,24 +115,24 @@ Controlled evaluations, model-specific tuning, version checks and agent profiles
 
 | Symbol / signature | Source |
 |---|---|
-| `installed(s, exe)` | [implementation](../app/operations.py#L21) |
-| `check_updates()` | [implementation](../app/operations.py#L47) |
-| `update_agents(s)` | [implementation](../app/operations.py#L70) |
-| `configure_agents(mid, select=True, engine=None, targets=None)` | [implementation](../app/operations.py#L94) |
-| `configure_active_agents(target)` | [implementation](../app/operations.py#L133) |
-| `agent_profiles()` | [implementation](../app/operations.py#L151) |
-| `restore_agents()` | [implementation](../app/operations.py#L162) |
-| `evaluation_model(value)` | [implementation](../app/operations.py#L171) |
-| `benchmark(mid, engine, cancel, progress)` | [implementation](../app/operations.py#L184) |
-| `benchmark_all(mid, cancel, progress)` | [implementation](../app/operations.py#L238) |
-| `functional(engine, public, strict=True)` | [implementation](../app/operations.py#L267) |
-| `optimize_all(value, cancel, progress)` | [implementation](../app/operations.py#L293) |
-| `optimize(mid, engine, cancel, progress)` | [implementation](../app/operations.py#L341) |
-| `optimize_mirai(mid, cancel, progress)` | [implementation](../app/operations.py#L400) |
-| `restore_profile(mid, engine)` | [implementation](../app/operations.py#L439) |
-| `agent_checks(cancel, progress, only=None)` | [implementation](../app/operations.py#L447) |
-| `configure_cloud()` | [implementation](../app/operations.py#L518) |
-| `rollback_update(s)` | [implementation](../app/operations.py#L537) |
+| `installed(s, exe)` | [implementation](../app/operations.py#L22) |
+| `check_updates()` | [implementation](../app/operations.py#L48) |
+| `update_agents(s)` | [implementation](../app/operations.py#L71) |
+| `configure_agents(mid, select=True, engine=None, targets=None)` | [implementation](../app/operations.py#L95) |
+| `configure_active_agents(target)` | [implementation](../app/operations.py#L134) |
+| `agent_profiles()` | [implementation](../app/operations.py#L152) |
+| `restore_agents()` | [implementation](../app/operations.py#L163) |
+| `evaluation_model(value)` | [implementation](../app/operations.py#L172) |
+| `benchmark(mid, engine, cancel, progress)` | [implementation](../app/operations.py#L185) |
+| `benchmark_all(mid, cancel, progress)` | [implementation](../app/operations.py#L239) |
+| `functional(engine, public, strict=True)` | [implementation](../app/operations.py#L268) |
+| `optimize_all(value, cancel, progress)` | [implementation](../app/operations.py#L294) |
+| `optimize(mid, engine, cancel, progress)` | [implementation](../app/operations.py#L342) |
+| `optimize_mirai(mid, cancel, progress)` | [implementation](../app/operations.py#L401) |
+| `restore_profile(mid, engine)` | [implementation](../app/operations.py#L440) |
+| `agent_checks(cancel, progress, only=None)` | [implementation](../app/operations.py#L448) |
+| `configure_cloud()` | [implementation](../app/operations.py#L519) |
+| `rollback_update(s)` | [implementation](../app/operations.py#L538) |
 
 ### integrations.py
 
@@ -128,17 +143,17 @@ Reviewed, user-owned local HTTP integrations; discovery never starts software.
 | `definitions()` | [implementation](../app/integrations.py#L10) |
 | `definition(s)` | [implementation](../app/integrations.py#L11) |
 | `validate(value)` | [implementation](../app/integrations.py#L12) |
-| `install_registry()` | [implementation](../app/integrations.py#L53) |
-| `register(value)` | [implementation](../app/integrations.py#L62) |
-| `unregister(sid)` | [implementation](../app/integrations.py#L72) |
-| `attach_models(rows)` | [implementation](../app/integrations.py#L77) |
-| `probe_custom(s)` | [implementation](../app/integrations.py#L86) |
-| `stop_custom(s)` | [implementation](../app/integrations.py#L94) |
-| `verify_loopback(s)` | [implementation](../app/integrations.py#L100) |
-| `launch(s, model=None)` | [implementation](../app/integrations.py#L111) |
-| `public_model(s, m)` | [implementation](../app/integrations.py#L129) |
-| `scan()` | [implementation](../app/integrations.py#L132) |
-| `view()` | [implementation](../app/integrations.py#L153) |
+| `install_registry()` | [implementation](../app/integrations.py#L54) |
+| `register(value)` | [implementation](../app/integrations.py#L63) |
+| `unregister(sid)` | [implementation](../app/integrations.py#L73) |
+| `attach_models(rows)` | [implementation](../app/integrations.py#L78) |
+| `probe_custom(s)` | [implementation](../app/integrations.py#L87) |
+| `stop_custom(s)` | [implementation](../app/integrations.py#L95) |
+| `verify_loopback(s)` | [implementation](../app/integrations.py#L101) |
+| `launch(s, model=None)` | [implementation](../app/integrations.py#L112) |
+| `public_model(s, m)` | [implementation](../app/integrations.py#L130) |
+| `scan()` | [implementation](../app/integrations.py#L133) |
+| `view()` | [implementation](../app/integrations.py#L154) |
 
 ### integration_assistant.py
 
@@ -146,8 +161,8 @@ Existing agent CLI, isolated local provider, no tools, reviewed JSON output.
 
 | Symbol / signature | Source |
 |---|---|
-| `parse(text)` | [implementation](../app/integration_assistant.py#L5) |
-| `propose(value, cancel, progress)` | [implementation](../app/integration_assistant.py#L21) |
+| `parse(text)` | [implementation](../app/integration_assistant.py#L6) |
+| `propose(value, cancel, progress)` | [implementation](../app/integration_assistant.py#L22) |
 
 ### remote_servers.py
 
@@ -385,8 +400,8 @@ Per-user filesystem protection and LAN TLS without macOS command dependencies.
 
 | Symbol / signature | Source |
 |---|---|
-| `secure_directory(path)` | [implementation](../app/portable_security.py#L5) |
-| `certificate(root, ip)` | [implementation](../app/portable_security.py#L15) |
+| `secure_directory(path)` | [implementation](../app/portable_security.py#L6) |
+| `certificate(root, ip)` | [implementation](../app/portable_security.py#L27) |
 
 ### install_clean.py
 
