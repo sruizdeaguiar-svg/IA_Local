@@ -4,10 +4,11 @@ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 const controls=html.match(/^function reconcileControls\(d\).*$/m)[0],nodes=new Map();
 const elem=id=>{if(!nodes.has(id))nodes.set(id,{value:'',disabled:false,hidden:false,dataset:{}});return nodes.get(id);};
 const start={dataset:{service:'hermes',operation:'start'}},stop={dataset:{service:'hermes',operation:'stop'}},cancel={dataset:{action:'cancel'}},recover={dataset:{action:'unload'}},open={disabled:false};
-const doc={querySelectorAll:selector=>selector==='[data-service]'?[start,stop]:selector==='[data-action]'?[cancel,recover]:selector==='[data-engine]'?[{dataset:{engine:'hermes'},querySelectorAll:()=>[open]}]:[]};
+const targets=['opencode','hermes','both'].map(activeAgent=>({dataset:{activeAgent},disabled:false}));
+const doc={querySelectorAll:selector=>selector==='[data-active-agent]'?targets:selector==='[data-service]'?[start,stop]:selector==='[data-action]'?[cancel,recover]:selector==='[data-engine]'?[{dataset:{engine:'hermes'},querySelectorAll:()=>[open]}]:[]};
 const model={id:'model',context:65536,engines:['llama']};elem('modelSelect').value='model';elem('engineSelect').value='llama';elem('detailEngine').value='hermes';
 let d={services:[{id:'hermes',kind:'agent',running:true,ready:true,can_stop:true,state:'Interfaz disponible'}],jobs:[],active:{},optimizations:[],updates:[],helper:{installed:false},lan:{enabled:false}};
-const ctx=vm.createContext({document:doc,$:elem,selected:()=>model,data:d});vm.runInContext(controls,ctx);ctx.d=d;vm.runInContext('reconcileControls(d)',ctx);
+const ctx=vm.createContext({document:doc,$:elem,selected:()=>model,data:d,remoteMode:false});vm.runInContext(controls,ctx);ctx.d=d;vm.runInContext('reconcileControls(d)',ctx);
 assert.equal(start.hidden,true);assert.equal(stop.hidden,false);assert.equal(cancel.disabled,true);assert.equal(recover.disabled,true);assert.equal(open.disabled,false);
 for(const b of [start,stop,cancel,recover])b.disabled=false;d.services[0].running=false;d.services[0].ready=false;d.services[0].state='Detenido';vm.runInContext('reconcileControls(d)',ctx);assert.equal(start.hidden,false);assert.equal(stop.hidden,true);assert.equal(open.disabled,true);
 for(const b of [start,stop,cancel,recover])b.disabled=false;d.jobs=[{state:'running',action:'benchmark',independent:false}];vm.runInContext('reconcileControls(d)',ctx);assert.equal(cancel.disabled,false);assert.equal(recover.disabled,true);
@@ -20,3 +21,10 @@ console.log('Idiomas: navegación y estados ES/EN, nombres de modelo intactos y 
 
 // A weightless waiting service can cancel its queued start without a PID.
 for(const b of [start,stop])b.disabled=false;d.services[0].state='En espera de modelo';d.services[0].can_stop=false;d.services[0].running=false;d.jobs=[];vm.runInContext('reconcileControls(d)',ctx);assert.equal(stop.disabled,false);assert.equal(stop.hidden,false);
+
+// A repeated render resets cached cards; derive agent targets from every sample.
+d.jobs=[];d.active={};for(const b of targets)b.disabled=false;vm.runInContext('reconcileControls(d)',ctx);assert.deepEqual(targets.map(b=>b.disabled),[true,true,true]);
+d.active={id:'active',context:4096};for(const b of targets)b.disabled=false;vm.runInContext('reconcileControls(d)',ctx);assert.deepEqual(targets.map(b=>b.disabled),[false,true,true]);
+d.active.context=65536;for(const b of targets)b.disabled=false;vm.runInContext('reconcileControls(d)',ctx);assert.deepEqual(targets.map(b=>b.disabled),[false,false,false]);
+ctx.remoteMode=true;d.remote={role:'viewer'};for(const b of targets)b.disabled=false;vm.runInContext('reconcileControls(d)',ctx);assert.deepEqual(targets.map(b=>b.disabled),[true,true,true]);
+console.log('Agentes: controles coherentes tras cada refresco, sin modelo, con contexto y según el rol.');
